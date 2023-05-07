@@ -16,6 +16,7 @@ import { ModelConfigList } from "./model-config";
 import { IconButton } from "./button";
 import {
   SubmitKey,
+  SummaryLevel,
   useChatStore,
   Theme,
   useUpdateStore,

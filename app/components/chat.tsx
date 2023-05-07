@@ -32,6 +32,7 @@ import {
   Theme,
   useAppConfig,
   ModelConfig,
+  SummaryLevel,
   DEFAULT_TOPIC,
 } from "../store";
 

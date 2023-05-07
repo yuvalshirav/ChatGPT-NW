@@ -19,7 +19,7 @@ export enum Theme {
 export enum SummaryLevel {
   Incremental = "incremental",
   Cumulative = "cumulative",
-  NoSummary = "none"
+  NoSummary = "none",
 }
 
 export const DEFAULT_CONFIG = {
@@ -43,7 +43,7 @@ export const DEFAULT_CONFIG = {
     sendMemory: true,
     historyMessageCount: 4,
     compressMessageLengthThreshold: 1000,
-    summaryLevel: SummaryLevel.Incremental as SummaryLevel,
+    summaryLevel: SummaryLevel.Incremental,
   },
 };
 

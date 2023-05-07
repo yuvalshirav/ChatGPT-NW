@@ -1,5 +1,10 @@
 import styles from "./settings.module.scss";
-import { ALL_MODELS, SummaryLevel, ModalConfigValidator, ModelConfig } from "../store";
+import {
+  ALL_MODELS,
+  SummaryLevel,
+  ModalConfigValidator,
+  ModelConfig,
+} from "../store";
 
 import Locale from "../locales";
 import { InputRange } from "./input-range";
@@ -30,7 +35,23 @@ export function ModelConfigList(props: {
           ))}
         </select>
       </ListItem>
-      
+      <ListItem title={Locale.Settings.SummaryLevel}>
+        <select
+          value={props.modelConfig.summaryLevel}
+          onChange={(e) => {
+            props.updateConfig(
+              (config) =>
+                (config.summaryLevel = e.currentTarget.value as SummaryLevel),
+            );
+          }}
+        >
+          {Object.entries(SummaryLevel).map(([key, value]) => (
+            <option key={key} value={key}>
+              {value}
+            </option>
+          ))}
+        </select>
+      </ListItem>
       <ListItem
         title={Locale.Settings.Temperature.Title}
         subTitle={Locale.Settings.Temperature.SubTitle}
