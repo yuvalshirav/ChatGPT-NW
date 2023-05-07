@@ -16,6 +16,12 @@ export enum Theme {
   Light = "light",
 }
 
+export enum SummaryLevel {
+  Incremental = "incremental",
+  Cumulative = "cumulative",
+  NoSummary = "none"
+}
+
 export const DEFAULT_CONFIG = {
   submitKey: SubmitKey.CtrlEnter as SubmitKey,
   avatar: "1f603",
@@ -30,13 +36,14 @@ export const DEFAULT_CONFIG = {
   dontShowMaskSplashScreen: false, // dont show splash screen when create chat
 
   modelConfig: {
-    model: "gpt-3.5-turbo" as ModelType,
+    model: "gpt-4" as ModelType,
     temperature: 1,
     max_tokens: 2000,
     presence_penalty: 0,
     sendMemory: true,
     historyMessageCount: 4,
     compressMessageLengthThreshold: 1000,
+    summaryLevel: SummaryLevel.Incremental as SummaryLevel,
   },
 };
 

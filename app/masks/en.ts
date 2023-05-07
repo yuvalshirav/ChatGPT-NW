@@ -1,3 +1,4 @@
+import { SummaryLevel } from "../store";
 import { BuiltinMask } from "./typing";
 
 export const EN_MASKS: BuiltinMask[] = [
@@ -37,6 +38,7 @@ export const EN_MASKS: BuiltinMask[] = [
       sendMemory: true,
       historyMessageCount: 4,
       compressMessageLengthThreshold: 1000,
+      summaryLevel: SummaryLevel.Incremental
     },
     lang: "en",
     builtin: true,

@@ -1,5 +1,5 @@
 import styles from "./settings.module.scss";
-import { ALL_MODELS, ModalConfigValidator, ModelConfig } from "../store";
+import { ALL_MODELS, SummaryLevel, ModalConfigValidator, ModelConfig } from "../store";
 
 import Locale from "../locales";
 import { InputRange } from "./input-range";
@@ -26,6 +26,22 @@ export function ModelConfigList(props: {
           {ALL_MODELS.map((v) => (
             <option value={v.name} key={v.name} disabled={!v.available}>
               {v.name}
+            </option>
+          ))}
+        </select>
+      </ListItem>
+      <ListItem title={Locale.Settings.SummaryLevel}>
+        <select
+          value={props.modelConfig.summaryLevel}
+          onChange={(e) => {
+            props.updateConfig(
+              (config) => config.summaryLevel = e.currentTarget.value as SummaryLevel
+            );
+          }}
+        >
+        {Object.entries(SummaryLevel).map(([key, value]) => (
+            <option key={key} value={key}>
+              {value}
             </option>
           ))}
         </select>

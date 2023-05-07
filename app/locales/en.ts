@@ -1,7 +1,6 @@
 import { SubmitKey } from "../store/config";
-import type { LocaleType } from "./index";
 
-const en: LocaleType = {
+const en = {
   WIP: "Coming Soon...",
   Error: {
     Unauthorized:
@@ -153,6 +152,7 @@ const en: LocaleType = {
       Placeholder: "Need Access Code",
     },
     Model: "Model",
+    SummaryLevel: "Summary Level",
     Temperature: {
       Title: "Temperature",
       SubTitle: "A larger value makes the more random output",
@@ -238,5 +238,7 @@ const en: LocaleType = {
     Edit: "Edit",
   },
 };
+
+export type LocaleType = typeof en;
 
 export default en;
