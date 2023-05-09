@@ -777,9 +777,7 @@ export function Chat() {
                 {!message.preview ? (
                   <div className={styles["chat-message-actions"]}>
                     <div className={styles["chat-message-action-date"]}>
-                      {message.nTokens
-                        ? `${message.nTokens} tokens`
-                        : "Calculating tokens..."}
+                      {message.nTokens ? `${message.nTokens} tokens` : ""}
                     </div>
                   </div>
                 ) : null}
