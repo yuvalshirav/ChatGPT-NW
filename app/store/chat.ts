@@ -238,6 +238,9 @@ export const useChatStore = create<ChatStore>()(
       },
 
       onNewMessage(message) {
+        requestTokenCount(message.content).then(
+          (nTokens) => (message.nTokens = nTokens),
+        );
         get().updateCurrentSession((session) => {
           session.lastUpdate = Date.now();
         });
@@ -501,9 +504,6 @@ export const useChatStore = create<ChatStore>()(
         get().updateCurrentSession((session) => {
           session.stat.charCount += message.content.length;
           // TODO: should update chat count and word count
-          requestTokenCount(message.content).then(
-            (nTokens) => (message.nTokens = nTokens),
-          );
         });
       },
 
