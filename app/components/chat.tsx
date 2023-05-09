@@ -774,16 +774,10 @@ export function Chat() {
                     defaultShow={i >= messages.length - 10}
                   />
                 </div>
-                {!isUser && !message.preview && (
+                {!message.preview && message.nTokens && (
                   <div className={styles["chat-message-actions"]}>
                     <div className={styles["chat-message-action-date"]}>
-                      {message.nPromptTokens ?? 0}
-                      {message.nCompletionTokens &&
-                        ` + ${message.nCompletionTokens} = ${
-                          message.nPromptTokens ?? 0 + message.nCompletionTokens
-                        }`}
-                      {" tokens | "}
-                      {message.date.toLocaleString()}
+                      {message.nTokens} tokens
                     </div>
                   </div>
                 )}

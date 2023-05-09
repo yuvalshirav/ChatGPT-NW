@@ -6,6 +6,7 @@ import {
   ControllerPool,
   requestChatStream,
   requestWithPrompt,
+  requestTokenCount,
 } from "../requests";
 import { isMobileScreen, trimTopic } from "../utils";
 
@@ -28,8 +29,7 @@ export type Message = ChatCompletionResponseMessage & {
   id?: number;
   model?: ModelType;
   summary?: string;
-  nPromptTokens?: number;
-  nCompletionTokens?: number;
+  nTokens?: number;
 };
 
 export function createMessage(override: Partial<Message>): Message {
@@ -276,18 +276,11 @@ export const useChatStore = create<ChatStore>()(
         // make request
         console.log("[User Input] ", sendMessages);
         requestChatStream(sendMessages, {
-          onMessage(
-            content,
-            done,
-            nPromptTokens?: number,
-            nCompletionTokens?: number,
-          ) {
+          onMessage(content, done) {
             // stream response
             if (done) {
               botMessage.streaming = false;
               botMessage.content = content;
-              botMessage.nPromptTokens = nPromptTokens;
-              botMessage.nCompletionTokens = nCompletionTokens;
               get().onNewMessage(botMessage);
               ControllerPool.remove(
                 sessionIndex,
@@ -508,6 +501,9 @@ export const useChatStore = create<ChatStore>()(
         get().updateCurrentSession((session) => {
           session.stat.charCount += message.content.length;
           // TODO: should update chat count and word count
+          requestTokenCount(message.content).then(
+            (nTokens) => (message.nTokens = nTokens),
+          );
         });
       },
 
