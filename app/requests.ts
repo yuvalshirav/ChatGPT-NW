@@ -13,20 +13,8 @@ import { ACCESS_CODE_PREFIX } from "./constant";
 import { INCREMENTAL_SUMMARY_PREFIX } from "./constant";
 
 function countGpt4Tokens(text: string): number {
-  let tokens = 0;
-
-  for (const char of text) {
-    // Add 1 token for each space or newline character
-    if (char === " " || char === "\n") {
-      tokens++;
-    }
-    // Add additional tokens for each Unicode character
-    else {
-      tokens += Math.ceil(char.charCodeAt(0) / 256);
-    }
-  }
-
-  return tokens;
+  const regex = /(\p{L}+(\p{M}*)|[\s.,!?])/gu;
+  return [...text.matchAll(regex)].length;
 }
 
 const TIME_OUT_MS = 60000;

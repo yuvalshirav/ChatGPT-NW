@@ -780,8 +780,8 @@ export function Chat() {
                       {message.nPromptTokens ?? 0}
                       {message.nCompletionTokens &&
                         ` + ${message.nCompletionTokens} = ${
-                          message.nPromptTokens ?? 0
-                        } + ${message.nCompletionTokens}`}
+                          message.nPromptTokens ?? 0 + message.nCompletionTokens
+                        }`}
                       {" tokens | "}
                       {message.date.toLocaleString()}
                     </div>
