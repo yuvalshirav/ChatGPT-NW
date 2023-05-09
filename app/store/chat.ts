@@ -257,6 +257,10 @@ export const useChatStore = create<ChatStore>()(
           content,
         });
 
+        requestTokenCount(content).then(
+          (nTokens) => (userMessage.nTokens = nTokens),
+        );
+
         const botMessage: Message = createMessage({
           role: "assistant",
           streaming: true,
