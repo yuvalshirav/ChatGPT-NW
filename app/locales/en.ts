@@ -179,6 +179,8 @@ const en = {
         "Please generate a four to five word title summarizing our conversation without any lead-in, punctuation, quotation marks, periods, symbols, or additional text. Remove enclosing quotation marks.",
       Summarize:
         "Summarize our discussion briefly in 200 words or less to use as a prompt for future context.",
+      SummarizeIncremental:
+        "Please aggresively summarize the last message (in context of the conversation), retaining only the bare minimum of informational content to keep context for our future conversation. Retain the conversational nature. Respond only with the summarized message without any intro.",
     },
   },
   Copy: {

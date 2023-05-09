@@ -11,7 +11,13 @@ import { isMobileScreen, trimTopic } from "../utils";
 
 import Locale from "../locales";
 import { showToast } from "../components/ui-lib";
-import { DEFAULT_CONFIG, ModelConfig, ModelType, useAppConfig } from "./config";
+import {
+  DEFAULT_CONFIG,
+  ModelConfig,
+  ModelType,
+  SummaryLevel,
+  useAppConfig,
+} from "./config";
 import { createEmptyMask, Mask } from "./mask";
 import { StoreKey } from "../constant";
 
@@ -21,6 +27,7 @@ export type Message = ChatCompletionResponseMessage & {
   isError?: boolean;
   id?: number;
   model?: ModelType;
+  summary?: string;
 };
 
 export function createMessage(override: Partial<Message>): Message {
@@ -100,8 +107,9 @@ interface ChatStore {
   ) => void;
   resetSession: () => void;
   getMessagesWithMemory: () => Message[];
+  getMessagesWithSummarized: () => Message[];
+  getMessagesBySummaryLevel: () => Message[];
   getMemoryPrompt: () => Message;
-
   clearAllData: () => void;
 }
 
@@ -252,7 +260,7 @@ export const useChatStore = create<ChatStore>()(
         });
 
         // get recent messages
-        const recentMessages = get().getMessagesWithMemory();
+        const recentMessages = get().getMessagesBySummaryLevel();
         const sendMessages = recentMessages.concat(userMessage);
         const sessionIndex = get().currentSessionIndex;
         const messageIndex = get().currentSession().messages.length + 1;
@@ -320,6 +328,31 @@ export const useChatStore = create<ChatStore>()(
         } as Message;
       },
 
+      getMessagesBySummaryLevel() {
+        const session = get().currentSession();
+        switch (session.mask.modelConfig.summaryLevel) {
+          case SummaryLevel.Cumulative:
+            return this.getMessagesWithMemory();
+          case SummaryLevel.Incremental:
+            return this.getMessagesWithSummarized();
+          default:
+            return session.messages;
+        }
+      },
+
+      getMessagesWithSummarized() {
+        const session = get().currentSession();
+        return [
+          {
+            role: "system",
+            content:
+              "In the following exchange, messages prefixed with `(summary)` have been previously summarized by you in order to retain context while saving tokens. Do not prefix `(summary)` to your response. That's only for earlier and already summarized messages.",
+            date: "",
+          },
+          ...session.messages,
+        ];
+      },
+
       getMessagesWithMemory() {
         const session = get().currentSession();
         const modelConfig = session.mask.modelConfig;
@@ -351,7 +384,7 @@ export const useChatStore = create<ChatStore>()(
         const threshold = modelConfig.compressMessageLengthThreshold;
 
         // get recent messages as many as possible
-        const reversedRecentMessages : Message[] = [];
+        const reversedRecentMessages: Message[] = [];
         for (
           let i = n - 1, count = 0;
           i >= oldestIndex && count < threshold;
@@ -399,6 +432,8 @@ export const useChatStore = create<ChatStore>()(
         ) {
           requestWithPrompt(session.messages, Locale.Store.Prompt.Topic, {
             model: "gpt-3.5-turbo",
+            temperature: 1,
+            presencePenalty: 0,
           }).then((res) => {
             get().updateCurrentSession(
               (session) =>

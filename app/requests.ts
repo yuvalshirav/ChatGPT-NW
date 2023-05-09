@@ -3,12 +3,14 @@ import {
   Message,
   ModelConfig,
   ModelType,
+  SummaryLevel,
   useAccessStore,
   useAppConfig,
   useChatStore,
 } from "./store";
 import { showToast } from "./components/ui-lib";
 import { ACCESS_CODE_PREFIX } from "./constant";
+import { INCREMENTAL_SUMMARY_PREFIX } from "./constant";
 
 const TIME_OUT_MS = 60000;
 
@@ -17,11 +19,18 @@ const makeRequestParam = (
   options?: {
     stream?: boolean;
     overrideModel?: ModelType;
+    overrideTemperature?: number;
+    overridePresencePenalty?: number;
   },
 ): ChatRequest => {
+  let session = useChatStore.getState().currentSession();
   let sendMessages = messages.map((v) => ({
     role: v.role,
-    content: v.content,
+    content:
+      session.mask.modelConfig.summaryLevel === SummaryLevel.Incremental &&
+      v.summary
+        ? `${INCREMENTAL_SUMMARY_PREFIX} ${v.summary}`
+        : v.content,
   }));
 
   const modelConfig = {
@@ -32,6 +41,12 @@ const makeRequestParam = (
   // override model config
   if (options?.overrideModel) {
     modelConfig.model = options.overrideModel;
+  }
+  if (options?.overrideTemperature != null) {
+    modelConfig.temperature = options?.overrideTemperature;
+  }
+  if (options?.overridePresencePenalty != null) {
+    modelConfig.presence_penalty = options?.overridePresencePenalty;
   }
 
   return {
@@ -79,10 +94,14 @@ export async function requestChat(
   messages: Message[],
   options?: {
     model?: ModelType;
+    temperature?: number;
+    presencePenalty?: number;
   },
 ) {
   const req: ChatRequest = makeRequestParam(messages, {
     overrideModel: options?.model,
+    overrideTemperature: options?.temperature,
+    overridePresencePenalty: options?.presencePenalty,
   });
 
   const res = await requestOpenaiClient("v1/chat/completions")(req);
@@ -231,6 +250,8 @@ export async function requestWithPrompt(
   prompt: string,
   options?: {
     model?: ModelType;
+    temperature?: number;
+    presencePenalty?: number;
   },
 ) {
   messages = messages.concat([
