@@ -12,14 +12,22 @@ import { showToast } from "./components/ui-lib";
 import { ACCESS_CODE_PREFIX } from "./constant";
 import { INCREMENTAL_SUMMARY_PREFIX } from "./constant";
 
-import { Tiktoken } from "@dqbd/tiktoken/lite";
-import cl100k_base from "@dqbd/tiktoken/encoders/cl100k_base.json";
+function countGpt4Tokens(text: string): number {
+  let tokens = 0;
 
-const encoding = new Tiktoken(
-  cl100k_base.bpe_ranks,
-  cl100k_base.special_tokens,
-  cl100k_base.pat_str,
-);
+  for (const char of text) {
+    // Add 1 token for each space or newline character
+    if (char === " " || char === "\n") {
+      tokens++;
+    }
+    // Add additional tokens for each Unicode character
+    else {
+      tokens += Math.ceil(char.charCodeAt(0) / 256);
+    }
+  }
+
+  return tokens;
+}
 
 const TIME_OUT_MS = 60000;
 
@@ -214,7 +222,7 @@ export async function requestChatStream(
     const concatedMessages: string = messages
       .map((message) => message.content)
       .join("\n");
-    const nPromptTokens = encoding.encode(concatedMessages).length;
+    const nPromptTokens = countGpt4Tokens(concatedMessages);
 
     const res = await futureRes;
 
@@ -235,7 +243,7 @@ export async function requestChatStream(
 
       while (true) {
         const resTimeoutId = setTimeout(() => {
-          const nCompletionTokens = encoding.encode(responseText).length;
+          const nCompletionTokens = countGpt4Tokens(responseText);
           finish(nPromptTokens, nCompletionTokens);
         }, TIME_OUT_MS);
         const content = await reader?.read();
@@ -256,7 +264,7 @@ export async function requestChatStream(
         }
       }
 
-      const nCompletionTokens = encoding.encode(responseText).length;
+      const nCompletionTokens = countGpt4Tokens(responseText);
 
       finish(nPromptTokens, nCompletionTokens);
     } else if (res.status === 401) {
