@@ -777,6 +777,12 @@ export function Chat() {
                 {!isUser && !message.preview && (
                   <div className={styles["chat-message-actions"]}>
                     <div className={styles["chat-message-action-date"]}>
+                      {message.nPromptTokens ?? 0}
+                      {message.nCompletionTokens &&
+                        ` + ${message.nCompletionTokens} = ${
+                          message.nPromptTokens ?? 0
+                        } + ${message.nCompletionTokens}`}
+                      {" tokens | "}
                       {message.date.toLocaleString()}
                     </div>
                   </div>

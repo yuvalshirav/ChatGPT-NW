@@ -28,6 +28,8 @@ export type Message = ChatCompletionResponseMessage & {
   id?: number;
   model?: ModelType;
   summary?: string;
+  nPromptTokens?: number;
+  nCompletionTokens?: number;
 };
 
 export function createMessage(override: Partial<Message>): Message {
@@ -274,11 +276,18 @@ export const useChatStore = create<ChatStore>()(
         // make request
         console.log("[User Input] ", sendMessages);
         requestChatStream(sendMessages, {
-          onMessage(content, done) {
+          onMessage(
+            content,
+            done,
+            nPromptTokens?: number,
+            nCompletionTokens?: number,
+          ) {
             // stream response
             if (done) {
               botMessage.streaming = false;
               botMessage.content = content;
+              botMessage.nPromptTokens = nPromptTokens;
+              botMessage.nCompletionTokens = nCompletionTokens;
               get().onNewMessage(botMessage);
               ControllerPool.remove(
                 sessionIndex,

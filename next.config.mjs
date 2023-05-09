@@ -3,6 +3,8 @@
 const nextConfig = {
   experimental: {
     appDir: true,
+    asyncWebAssembly: true,
+    syncWebAssembly: true
   },
   async rewrites() {
     const ret = [];
@@ -25,6 +27,12 @@ const nextConfig = {
       test: /\.svg$/,
       use: ["@svgr/webpack"],
     });
+    config.module.rules.push({
+      test: /\.wasm$/,
+      type: 'webassembly/sync',
+      use: {
+        loader: 'wasm-loader',
+    }});
 
     return config;
   },

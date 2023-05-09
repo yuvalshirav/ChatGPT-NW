@@ -12,6 +12,15 @@ import { showToast } from "./components/ui-lib";
 import { ACCESS_CODE_PREFIX } from "./constant";
 import { INCREMENTAL_SUMMARY_PREFIX } from "./constant";
 
+import { Tiktoken } from "@dqbd/tiktoken/lite";
+import cl100k_base from "@dqbd/tiktoken/encoders/cl100k_base.json";
+
+const encoding = new Tiktoken(
+  cl100k_base.bpe_ranks,
+  cl100k_base.special_tokens,
+  cl100k_base.pat_str,
+);
+
 const TIME_OUT_MS = 60000;
 
 const makeRequestParam = (
@@ -169,7 +178,12 @@ export async function requestChatStream(
   options?: {
     modelConfig?: ModelConfig;
     overrideModel?: ModelType;
-    onMessage: (message: string, done: boolean) => void;
+    onMessage: (
+      message: string,
+      done: boolean,
+      nPromptTokens?: number,
+      nCompletionTokens?: number,
+    ) => void;
     onError: (error: Error, statusCode?: number) => void;
     onController?: (controller: AbortController) => void;
   },
@@ -186,7 +200,8 @@ export async function requestChatStream(
 
   try {
     const openaiUrl = useAccessStore.getState().openaiUrl;
-    const res = await fetch(openaiUrl + "v1/chat/completions", {
+
+    const futureRes = fetch(openaiUrl + "v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -196,12 +211,19 @@ export async function requestChatStream(
       signal: controller.signal,
     });
 
+    const concatedMessages: string = messages
+      .map((message) => message.content)
+      .join("\n");
+    const nPromptTokens = encoding.encode(concatedMessages).length;
+
+    const res = await futureRes;
+
     clearTimeout(reqTimeoutId);
 
     let responseText = "";
 
-    const finish = () => {
-      options?.onMessage(responseText, true);
+    const finish = (nPromptTokens?: number, nCompletionTokens?: number) => {
+      options?.onMessage(responseText, true, nPromptTokens, nCompletionTokens);
       controller.abort();
     };
 
@@ -212,7 +234,10 @@ export async function requestChatStream(
       options?.onController?.(controller);
 
       while (true) {
-        const resTimeoutId = setTimeout(() => finish(), TIME_OUT_MS);
+        const resTimeoutId = setTimeout(() => {
+          const nCompletionTokens = encoding.encode(responseText).length;
+          finish(nPromptTokens, nCompletionTokens);
+        }, TIME_OUT_MS);
         const content = await reader?.read();
         clearTimeout(resTimeoutId);
 
@@ -224,14 +249,16 @@ export async function requestChatStream(
         responseText += text;
 
         const done = content.done;
-        options?.onMessage(responseText, false);
+        options?.onMessage(responseText, false, nPromptTokens);
 
         if (done) {
           break;
         }
       }
 
-      finish();
+      const nCompletionTokens = encoding.encode(responseText).length;
+
+      finish(nPromptTokens, nCompletionTokens);
     } else if (res.status === 401) {
       console.error("Unauthorized");
       options?.onError(new Error("Unauthorized"), res.status);
