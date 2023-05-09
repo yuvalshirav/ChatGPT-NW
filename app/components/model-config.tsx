@@ -119,8 +119,8 @@ export function ModelConfigList(props: {
           title={props.modelConfig.historyMessageCount.toString()}
           value={props.modelConfig.historyMessageCount}
           min="0"
-          max="32"
-          step="1"
+          max="1000"
+          step="50"
           onChange={(e) =>
             props.updateConfig(
               (config) => (config.historyMessageCount = e.target.valueAsNumber),
@@ -135,7 +135,7 @@ export function ModelConfigList(props: {
       >
         <input
           type="number"
-          min={500}
+          min={0}
           max={4000}
           value={props.modelConfig.compressMessageLengthThreshold}
           onChange={(e) =>
