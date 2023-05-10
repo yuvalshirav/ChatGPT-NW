@@ -620,8 +620,7 @@ export function Chat() {
   const isChat = location.pathname === Path.Chat;
   const autoFocus = !isMobileScreen || isChat; // only focus in chat page
 
-  let nPromptTokens,
-    nCompletionTokens = countTotalTokens(messages);
+  let [nPromptTokens, nCompletionTokens] = countTotalTokens(messages);
 
   return (
     <div className={styles.chat} key={session.id}>
