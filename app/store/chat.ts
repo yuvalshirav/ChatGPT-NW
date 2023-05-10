@@ -7,6 +7,7 @@ import {
   requestChatStream,
   requestWithPrompt,
   requestTokenCount,
+  requestChat,
 } from "../requests";
 import { isMobileScreen, trimTopic } from "../utils";
 
@@ -518,6 +519,12 @@ export const useChatStore = create<ChatStore>()(
         }
       },
 
+      // Are system messages included?
+      summarizeMessageInContext(message) {
+        const session = get().currentSession();
+        const i = session.messages.indexOf(message);
+      },
+
       updateStat(message) {
         get().updateCurrentSession((session) => {
           session.stat.charCount += message.content.length;
@@ -540,6 +547,8 @@ export const useChatStore = create<ChatStore>()(
           });
 
         set(() => ({ sessions }));
+        console.log("[Messages]");
+        console.log(session.messages);
       },
 
       clearAllData() {
