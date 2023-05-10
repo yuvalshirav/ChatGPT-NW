@@ -276,7 +276,30 @@ export async function requestWithPrompt(
 }
 
 export async function requestTokenCount(text: string): Promise<number> {
-  const res = await requestChat(
+  const shuffledText = shuffleWords(text.replace(/"{3}|'{3}|`{3}/g, "___"));
+  const res3 = await requestChat(
+    [
+      {
+        role: "user",
+        content: `Please count the number of ChatGPT tokens in the text between the triple quotes. Respond just with an integer and nothing else - no intro, no punctuation, just an integer representing the number of tokens in the text between the triple quotes:\n"""${shuffledText}"""`,
+        date: "",
+      },
+    ],
+    {
+      model: "gpt-3.5-turbo",
+      temperature: 0.2,
+      presencePenalty: 0,
+    },
+  );
+  let response = res3?.choices?.at(0)?.message?.content;
+  if (response && /^\d+$/.test(response)) {
+    console.log("tokens3 worked!");
+    return parseInt(response);
+  }
+
+  console.log("tokens4 didn't work!");
+
+  const res4 = await requestChat(
     [
       {
         role: "system",
@@ -296,7 +319,21 @@ export async function requestTokenCount(text: string): Promise<number> {
       presencePenalty: 0,
     },
   );
-  return parseInt(res?.choices?.at(0)?.message?.content ?? "0");
+  return parseInt(res4?.choices?.at(0)?.message?.content ?? "0");
+}
+
+function shuffleWords(input: string): string {
+  // Split string into words
+  let words = input.split(" ");
+
+  // Shuffle array in-place
+  for (let i = words.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1));
+    [words[i], words[j]] = [words[j], words[i]];
+  }
+
+  // Rejoin words into a string
+  return words.join(" ");
 }
 
 // To store message streaming controller
