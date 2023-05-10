@@ -42,6 +42,21 @@ export function createMessage(override: Partial<Message>): Message {
   };
 }
 
+export function countTotalTokens(messages: Message[]): [number, number] {
+  let nPromptTokens: number = 0;
+  let nCompletionTokens: number = 0;
+
+  messages.forEach((message) => {
+    if (message.role == "assistant") {
+      nCompletionTokens += message.nTokens ?? 0;
+    } else {
+      nPromptTokens += message.nTokens ?? 0;
+    }
+  });
+
+  return [nPromptTokens, nCompletionTokens];
+}
+
 export const ROLES: Message["role"][] = ["system", "user", "assistant"];
 
 export interface ChatStat {
@@ -60,6 +75,8 @@ export interface ChatSession {
   stat: ChatStat;
   lastUpdate: number;
   lastSummarizeIndex: number;
+  nPromptTokens: number;
+  nCompletionTokens: number;
 
   mask: Mask;
 }
@@ -84,6 +101,8 @@ function createEmptySession(): ChatSession {
     lastUpdate: Date.now(),
     lastSummarizeIndex: 0,
     mask: createEmptyMask(),
+    nPromptTokens: 0,
+    nCompletionTokens: 0,
   };
 }
 
@@ -238,9 +257,6 @@ export const useChatStore = create<ChatStore>()(
       },
 
       onNewMessage(message) {
-        requestTokenCount(message.content).then(
-          (nTokens) => (message.nTokens = nTokens),
-        );
         get().updateCurrentSession((session) => {
           session.lastUpdate = Date.now();
         });
@@ -256,10 +272,6 @@ export const useChatStore = create<ChatStore>()(
           role: "user",
           content,
         });
-
-        requestTokenCount(content).then(
-          (nTokens) => (userMessage.nTokens = nTokens),
-        );
 
         const botMessage: Message = createMessage({
           role: "assistant",
@@ -514,7 +526,17 @@ export const useChatStore = create<ChatStore>()(
       updateCurrentSession(updater) {
         const sessions = get().sessions;
         const index = get().currentSessionIndex;
-        updater(sessions[index]);
+        const session = sessions[index];
+        updater(session);
+        session.messages
+          .filter((message) => !message.nTokens)
+          .forEach((message) => {
+            requestTokenCount(message.content).then((nTokens) => {
+              message.nTokens = nTokens;
+            });
+            console.log("Counting tokens");
+          });
+
         set(() => ({ sessions }));
       },
 

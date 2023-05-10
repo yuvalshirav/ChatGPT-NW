@@ -34,6 +34,7 @@ import {
   ModelConfig,
   SummaryLevel,
   DEFAULT_TOPIC,
+  countTotalTokens,
 } from "../store";
 
 import {
@@ -619,6 +620,9 @@ export function Chat() {
   const isChat = location.pathname === Path.Chat;
   const autoFocus = !isMobileScreen || isChat; // only focus in chat page
 
+  let nPromptTokens,
+    nCompletionTokens = countTotalTokens(messages);
+
   return (
     <div className={styles.chat} key={session.id}>
       <div className="window-header">
@@ -630,7 +634,8 @@ export function Chat() {
             {!session.topic ? DEFAULT_TOPIC : session.topic}
           </div>
           <div className="window-header-sub-title">
-            {Locale.Chat.SubTitle(session.messages.length)}
+            {nPromptTokens} prompt tokens | {nCompletionTokens} completion
+            tokens
           </div>
         </div>
         <div className="window-actions">
