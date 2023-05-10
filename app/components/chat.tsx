@@ -745,12 +745,14 @@ export function Chat() {
                           >
                             {Locale.Chat.Actions.Delete}
                           </div>
-                          <div
-                            className={styles["chat-message-top-action"]}
-                            onClick={() => onResend(message.id ?? i)}
-                          >
-                            {Locale.Chat.Actions.Retry}
-                          </div>
+                          {!isUser ? (
+                            <div
+                              className={styles["chat-message-top-action"]}
+                              onClick={() => onResend(message.id ?? i)}
+                            >
+                              {Locale.Chat.Actions.Retry}
+                            </div>
+                          ) : null}
                         </>
                       )}
 
