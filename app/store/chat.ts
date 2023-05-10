@@ -29,7 +29,9 @@ export type Message = ChatCompletionResponseMessage & {
   id?: number;
   model?: ModelType;
   summary?: string;
+  useSummary?: boolean;
   nTokens?: number;
+  nSummaryTokens?: number;
 };
 
 export function createMessage(override: Partial<Message>): Message {
