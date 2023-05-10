@@ -634,8 +634,8 @@ export function Chat() {
             {!session.topic ? DEFAULT_TOPIC : session.topic}
           </div>
           <div className="window-header-sub-title">
-            `${nPromptTokens} prompt tokens | {nCompletionTokens} completion
-            tokens`
+            {`${nPromptTokens} prompt tokens | {nCompletionTokens} completion
+            tokens`}
           </div>
         </div>
         <div className="window-actions">
