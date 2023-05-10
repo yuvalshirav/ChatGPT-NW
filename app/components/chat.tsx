@@ -704,9 +704,7 @@ export function Chat() {
         {messages.map((message, i) => {
           const isUser = message.role === "user";
           const showActions =
-            !isUser &&
-            i > 0 &&
-            !(message.preview || message.content.length === 0);
+            i > 0 && !(message.preview || message.content.length === 0);
           const showTyping = message.preview || message.streaming;
 
           return (
@@ -732,7 +730,7 @@ export function Chat() {
                 <div className={styles["chat-message-item"]}>
                   {showActions && (
                     <div className={styles["chat-message-top-actions"]}>
-                      {message.streaming ? (
+                      {message.streaming && !isUser ? (
                         <div
                           className={styles["chat-message-top-action"]}
                           onClick={() => onUserStop(message.id ?? i)}
