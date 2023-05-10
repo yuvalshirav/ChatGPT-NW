@@ -432,16 +432,14 @@
   }
 }
 
-.chat-message-user {
-  .chat-message-top-actions {
-    left: 20px;
-    top: -26px;
-    right: 100px;
-    .chat-message-top-action {
-      &:not(:first-child) {
-        margin-left: 10px;
-        margin-right: none;
-      }
+.chat-message-user > .chat-message-top-actions {
+  left: 20px;
+  top: -26px;
+  right: 100px;
+  .chat-message-top-action {
+    &:not(:first-child) {
+      margin-left: 10px;
+      margin-right: none;
     }
   }
 }
