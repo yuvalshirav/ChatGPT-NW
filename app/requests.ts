@@ -96,14 +96,13 @@ export async function requestChat(
     model?: ModelType;
     temperature?: number;
     presencePenalty?: number;
-    stream?: boolean;
   },
 ) {
   const req: ChatRequest = makeRequestParam(messages, {
     overrideModel: options?.model,
     overrideTemperature: options?.temperature,
     overridePresencePenalty: options?.presencePenalty,
-    stream: options?.stream ?? true,
+    stream: false,
   });
 
   const res = await requestOpenaiClient("v1/chat/completions")(req);
