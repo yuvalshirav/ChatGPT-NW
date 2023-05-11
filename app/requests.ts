@@ -294,11 +294,9 @@ export async function requestTokenCount(text: string): Promise<number> {
       presencePenalty: 0,
     },
   );
-  console.log("Token count");
-  console.log(text);
-  console.log(res3);
 
-  return res3?.usage?.prompt_tokens ?? 0;
+  let nTokens = res3?.usage?.prompt_tokens;
+  return nTokens ? nTokens - 11 : 0;
 }
 
 function shuffleWords(input: string): string {
