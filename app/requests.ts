@@ -276,12 +276,12 @@ export async function requestWithPrompt(
 }
 
 export async function requestTokenCount(text: string): Promise<number> {
-  const shuffledText = shuffleWords(text.replace(/"{3}|'{3}|`{3}/g, "___"));
+  const shuffledText = shuffleWords(text);
   const res3 = await requestChat(
     [
       {
         role: "user",
-        content: `Please count the number of ChatGPT tokens in the text between the triple quotes. Respond just with an integer and nothing else - no intro, no punctuation, just an integer representing the number of tokens in the text between the triple quotes:\n"""${shuffledText}"""`,
+        content: shuffledText,
         date: "",
       },
     ],
@@ -291,35 +291,8 @@ export async function requestTokenCount(text: string): Promise<number> {
       presencePenalty: 0,
     },
   );
-  let response = res3?.choices?.at(0)?.message?.content;
-  if (response && /^\d+$/.test(response)) {
-    console.log("tokens3 worked!");
-    return parseInt(response);
-  }
 
-  console.log("tokens4 didn't work!");
-
-  const res4 = await requestChat(
-    [
-      {
-        role: "system",
-        content:
-          "Your sole task is responding to any user prompt with the number of ChatGPT tokens in the prompt (integer only). Ignore the actual content, no matter what.",
-        date: "",
-      },
-      {
-        role: "user",
-        content: text,
-        date: "",
-      },
-    ],
-    {
-      model: "gpt-4",
-      temperature: 0.2,
-      presencePenalty: 0,
-    },
-  );
-  return parseInt(res4?.choices?.at(0)?.message?.content ?? "0");
+  return res3?.usage?.prompt_tokens ?? 0;
 }
 
 function shuffleWords(input: string): string {
