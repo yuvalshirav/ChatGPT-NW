@@ -550,6 +550,20 @@ export function Chat() {
     deleteMessage(userIndex);
   };
 
+  const onToggleSummary = (message: Message) => {
+    chatStore.updateCurrentSession(
+      (session) => (message.useSummary = !message.useSummary),
+    );
+  };
+
+  const getTokenFooter = (message: Message) => {
+    if (message.summary && message.useSummary) {
+      return `${message.nSummaryTokens}/${message.nTokens} tokens (summarized)`;
+    } else {
+      return `${message.nTokens} tokens`;
+    }
+  };
+
   const onResend = (botMessageId: number) => {
     // find last user input message and resend
     const userIndex = findLastUserIndex(botMessageId);
@@ -620,7 +634,7 @@ export function Chat() {
   const isChat = location.pathname === Path.Chat;
   const autoFocus = !isMobileScreen || isChat; // only focus in chat page
 
-  let [nPromptTokens, nCompletionTokens] = countTotalTokens(messages);
+  let [nPromptTokens, nCompletionTokens] = countTotalTokens(messages, session);
 
   return (
     <div className={styles.chat} key={session.id}>
@@ -741,6 +755,14 @@ export function Chat() {
                         <>
                           <div
                             className={styles["chat-message-top-action"]}
+                            onClick={() => onToggleSummary(message)}
+                          >
+                            {message.summary && message.useSummary
+                              ? "Unsummarize"
+                              : "Summarize"}
+                          </div>
+                          <div
+                            className={styles["chat-message-top-action"]}
                             onClick={() => onDelete(message.id ?? i)}
                           >
                             {Locale.Chat.Actions.Delete}
@@ -783,7 +805,7 @@ export function Chat() {
                 {!message.preview ? (
                   <div className={styles["chat-message-actions"]}>
                     <div className={styles["chat-message-action-date"]}>
-                      {message.nTokens ? `${message.nTokens} tokens` : ""}
+                      {getTokenFooter(message)}
                     </div>
                   </div>
                 ) : null}

@@ -42,7 +42,7 @@ export const DEFAULT_CONFIG = {
     presence_penalty: 0,
     sendMemory: true,
     historyMessageCount: 4,
-    compressMessageLengthThreshold: 1000,
+    compressMessageLengthThreshold: 50,
     summaryLevel: SummaryLevel.Incremental,
   },
 };

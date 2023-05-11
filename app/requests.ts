@@ -7,10 +7,12 @@ import {
   useAccessStore,
   useAppConfig,
   useChatStore,
+  ChatSession,
 } from "./store";
 import { showToast } from "./components/ui-lib";
 import { ACCESS_CODE_PREFIX } from "./constant";
 import { INCREMENTAL_SUMMARY_PREFIX } from "./constant";
+import Locale from "./locales";
 
 const TIME_OUT_MS = 60000;
 
@@ -24,14 +26,25 @@ const makeRequestParam = (
   },
 ): ChatRequest => {
   let session = useChatStore.getState().currentSession();
-  let sendMessages = messages.map((v) => ({
-    role: v.role,
-    content:
-      session.mask.modelConfig.summaryLevel === SummaryLevel.Incremental &&
-      v.summary
-        ? `${INCREMENTAL_SUMMARY_PREFIX} ${v.summary}`
-        : v.content,
-  }));
+  let summaryIntro: Message = {
+    role: "system",
+    content: `Note that any message prefixed by "${INCREMENTAL_SUMMARY_PREFIX}" has been previously summarized by you, so it does not appear in full or in the original form.`,
+    date: "",
+  };
+  let sendMessages = [
+    summaryIntro,
+    ...messages
+      .map((message) => getMessageOrSummary(message, session))
+      .map(([message, inSummary]) => {
+        return {
+          role: message.role,
+          content: inSummary
+            ? `${INCREMENTAL_SUMMARY_PREFIX} ${message.content}`
+            : message.content,
+          date: message.date,
+        };
+      }),
+  ];
 
   const modelConfig = {
     ...useAppConfig.getState().modelConfig,
@@ -275,12 +288,14 @@ export async function requestWithPrompt(
   return res?.choices?.at(0)?.message?.content ?? "";
 }
 
-export async function requestTokenCount(text: string): Promise<number> {
-  if (!text) {
-    return 0;
+export function annotateTokenCount(
+  message: Message,
+): Promise<Message | undefined | null> {
+  if (!message.content) {
+    return Promise.resolve(message);
   }
-  const shuffledText = shuffleWords(text);
-  const res3 = await requestChat(
+  const shuffledText = shuffleWords(message.content);
+  return requestChat(
     [
       {
         role: "user",
@@ -293,10 +308,91 @@ export async function requestTokenCount(text: string): Promise<number> {
       temperature: 0.2,
       presencePenalty: 0,
     },
-  );
+  ).then((response) => {
+    let nTokens = response?.usage?.prompt_tokens;
+    if (nTokens) {
+      message.nTokens = nTokens;
+      return message;
+    }
+    return message;
+  });
+}
 
-  let nTokens = res3?.usage?.prompt_tokens;
-  return nTokens ? nTokens - 11 : 0;
+export function isMessageInSummaryMode(
+  message: Message,
+  session: ChatSession,
+  checkFlag: boolean = false,
+): boolean {
+  return (message.summary && (!checkFlag || message.useSummary)) || false;
+}
+
+export function getMessageOrSummary(
+  message: Message,
+  session: ChatSession,
+  checkFlag: boolean = false,
+): [Message, boolean] {
+  let inSummaryMode = isMessageInSummaryMode(message, session, checkFlag);
+  return [
+    {
+      role: message.role,
+      content: (inSummaryMode ? message.summary : message.content) || "",
+      date: message.date,
+    },
+    inSummaryMode,
+  ];
+}
+
+export function summarizeMessageIncrementally(
+  message: Message,
+  session: ChatSession,
+): Promise<Message | undefined | null> {
+  if (session.mask.modelConfig.summaryLevel != SummaryLevel.Incremental) {
+    return Promise.resolve(message);
+  }
+
+  if (
+    message.content.length <
+    session.mask.modelConfig.compressMessageLengthThreshold
+  ) {
+    return Promise.resolve(message);
+  }
+
+  let systemMessages: Message[] = session.mask.context.filter(
+    (message) => message.role == "system",
+  );
+  const i = session.messages.indexOf(message);
+  if (i == -1) {
+    return Promise.resolve(message);
+  }
+  return requestChat(
+    [
+      ...systemMessages,
+      {
+        role: "system",
+        content: Locale.Store.Prompt.SummarizeIncremental,
+        date: "",
+      },
+      ...session.messages
+        .slice(0, i + 1)
+        .map((message) => getMessageOrSummary(message, session, false))
+        .map(([message, inSummaryMode]) => message),
+    ],
+    {
+      model: "gpt-4",
+      temperature: 0.7,
+      presencePenalty: 0,
+    },
+  ).then((response) => {
+    let summary = response?.choices?.at(0)?.message?.content;
+    if (summary) {
+      message.summary = summary;
+      message.useSummary = true;
+      message.nSummaryTokens = response?.usage?.completion_tokens;
+      console.log("Summary:");
+      console.log(summary);
+    }
+    return message;
+  });
 }
 
 function shuffleWords(input: string): string {

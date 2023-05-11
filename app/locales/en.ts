@@ -180,7 +180,7 @@ const en = {
       Summarize:
         "Summarize our discussion briefly in 200 words or less to use as a prompt for future context.",
       SummarizeIncremental:
-        "Please aggresively summarize the last message (in context of the conversation), retaining only the bare minimum of informational content to keep context for our future conversation. Retain the conversational nature. Respond only with the summarized message without any intro.",
+        "You are an expert in summarizing. You summarize messages for your own future context of our conversations. You aim to create summarizes as short as possible, while still the information required for future context. Code or SQL or anything within triple backticks or triple quotes or triple double quotes should be left as-is and not summarized. Your task is to summarize the last message in context of the provided previous messages (some of which were already summarized). No need to repeat context evident from earlier messages. Please respond with your summary of the last message (not a response to it, but a summary) and nothing else. No intro, just the summary.",
     },
   },
   Copy: {

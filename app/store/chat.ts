@@ -6,8 +6,9 @@ import {
   ControllerPool,
   requestChatStream,
   requestWithPrompt,
-  requestTokenCount,
+  annotateTokenCount,
   requestChat,
+  summarizeMessageIncrementally,
 } from "../requests";
 import { isMobileScreen, trimTopic } from "../utils";
 
@@ -45,15 +46,22 @@ export function createMessage(override: Partial<Message>): Message {
   };
 }
 
-export function countTotalTokens(messages: Message[]): [number, number] {
+export function countTotalTokens(
+  messages: Message[],
+  session: ChatSession,
+): [number, number] {
   let nPromptTokens: number = 0;
   let nCompletionTokens: number = 0;
 
-  messages.forEach((message) => {
-    if (message.role == "assistant") {
-      nCompletionTokens += message.nTokens ?? 0;
+  [...session.mask.context, ...messages].forEach((message) => {
+    let nTokens =
+      message.summary && message.useSummary && message.nSummaryTokens
+        ? message.nSummaryTokens
+        : message.nTokens;
+    if (message.role != "user") {
+      nCompletionTokens += nTokens ?? 0;
     } else {
-      nPromptTokens += message.nTokens ?? 0;
+      nPromptTokens += nTokens ?? 0;
     }
   });
 
@@ -85,6 +93,7 @@ export interface ChatSession {
 }
 
 export const DEFAULT_TOPIC = Locale.Store.DefaultTopic;
+// TODO remove bot hello
 export const BOT_HELLO: Message = createMessage({
   role: "assistant",
   content: Locale.Store.BotHello,
@@ -132,7 +141,7 @@ interface ChatStore {
   resetSession: () => void;
   getMessagesWithMemory: () => Message[];
   getMessagesWithSummarized: () => Message[];
-  getMessagesBySummaryLevel: () => Message[];
+  //getMessagesBySummaryLevel: () => Message[];
   getMemoryPrompt: () => Message;
   clearAllData: () => void;
 }
@@ -264,7 +273,7 @@ export const useChatStore = create<ChatStore>()(
           session.lastUpdate = Date.now();
         });
         get().updateStat(message);
-        get().summarizeSession();
+        //get().summarizeSession();
       },
 
       async onUserInput(content) {
@@ -275,6 +284,12 @@ export const useChatStore = create<ChatStore>()(
           role: "user",
           content,
         });
+        summarizeMessageIncrementally(userMessage, session).then((message) =>
+          get().updateCurrentSession((session) => {}),
+        );
+        annotateTokenCount(userMessage).then((message) =>
+          get().updateCurrentSession((session) => {}),
+        );
 
         const botMessage: Message = createMessage({
           role: "assistant",
@@ -284,8 +299,8 @@ export const useChatStore = create<ChatStore>()(
         });
 
         // get recent messages
-        const recentMessages = get().getMessagesBySummaryLevel();
-        const sendMessages = recentMessages.concat(userMessage);
+        //const recentMessages = get().getMessagesBySummaryLevel();
+        //const sendMessages = recentMessages.concat(userMessage);
         const sessionIndex = get().currentSessionIndex;
         const messageIndex = get().currentSession().messages.length + 1;
 
@@ -295,6 +310,8 @@ export const useChatStore = create<ChatStore>()(
           session.messages.push(botMessage);
         });
 
+        const sendMessages = [...session.mask.context, ...session.messages];
+
         // make request
         console.log("[User Input] ", sendMessages);
         requestChatStream(sendMessages, {
@@ -303,6 +320,12 @@ export const useChatStore = create<ChatStore>()(
             if (done) {
               botMessage.streaming = false;
               botMessage.content = content;
+              summarizeMessageIncrementally(botMessage, session).then(
+                (message) => get().updateCurrentSession((session) => {}),
+              );
+              annotateTokenCount(userMessage).then((message) =>
+                get().updateCurrentSession((session) => {}),
+              );
               get().onNewMessage(botMessage);
               ControllerPool.remove(
                 sessionIndex,
@@ -314,7 +337,9 @@ export const useChatStore = create<ChatStore>()(
             }
           },
           onError(error, statusCode) {
+            console.log("Error");
             const isAborted = error.message.includes("aborted");
+            console.log([error, statusCode, isAborted]);
             if (statusCode === 401) {
               botMessage.content = Locale.Error.Unauthorized;
             } else if (!isAborted) {
@@ -352,17 +377,17 @@ export const useChatStore = create<ChatStore>()(
         } as Message;
       },
 
-      getMessagesBySummaryLevel() {
-        const session = get().currentSession();
-        switch (session.mask.modelConfig.summaryLevel) {
-          case SummaryLevel.Cumulative:
-            return this.getMessagesWithMemory();
-          case SummaryLevel.Incremental:
-            return this.getMessagesWithSummarized();
-          default:
-            return session.messages;
-        }
-      },
+      // getMessagesBySummaryLevel() {
+      //   const session = get().currentSession();
+      //   switch (session.mask.modelConfig.summaryLevel) {
+      //     case SummaryLevel.Cumulative:
+      //       return this.getMessagesWithMemory();
+      //     case SummaryLevel.Incremental:
+      //       return this.getMessagesWithSummarized();
+      //     default:
+      //       return session.messages;
+      //   }
+      // },
 
       getMessagesWithSummarized() {
         const session = get().currentSession();
@@ -519,12 +544,6 @@ export const useChatStore = create<ChatStore>()(
         }
       },
 
-      // Are system messages included?
-      summarizeMessageInContext(message) {
-        const session = get().currentSession();
-        const i = session.messages.indexOf(message);
-      },
-
       updateStat(message) {
         get().updateCurrentSession((session) => {
           session.stat.charCount += message.content.length;
@@ -537,15 +556,6 @@ export const useChatStore = create<ChatStore>()(
         const index = get().currentSessionIndex;
         const session = sessions[index];
         updater(session);
-        session.messages
-          .filter((message) => !message.nTokens)
-          .forEach((message) => {
-            requestTokenCount(message.content).then((nTokens) => {
-              message.nTokens = nTokens;
-            });
-            console.log("Counting tokens");
-          });
-
         set(() => ({ sessions }));
         console.log("[Messages]");
         console.log(session.messages);
