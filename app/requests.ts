@@ -276,12 +276,15 @@ export async function requestWithPrompt(
 }
 
 export async function requestTokenCount(text: string): Promise<number> {
+  if (!text) {
+    return 0;
+  }
   const shuffledText = shuffleWords(text);
   const res3 = await requestChat(
     [
       {
         role: "user",
-        content: shuffledText,
+        content: `${shuffledText}\nNevermind`,
         date: "",
       },
     ],
@@ -291,6 +294,8 @@ export async function requestTokenCount(text: string): Promise<number> {
       presencePenalty: 0,
     },
   );
+  console.log("Token count");
+  console.log(res3);
 
   return res3?.usage?.prompt_tokens ?? 0;
 }
