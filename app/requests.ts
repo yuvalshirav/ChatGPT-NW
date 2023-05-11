@@ -31,19 +31,16 @@ const makeRequestParam = (
     content: `Note that any message prefixed by "${INCREMENTAL_SUMMARY_PREFIX}" has been previously summarized by you, so it does not appear in full or in the original form.`,
     date: "",
   };
-  let sendMessages = [
-    summaryIntro,
-    ...messages
-      .map((message) => getMessageOrSummary(message, session))
-      .map(([message, inSummary]) => {
-        return {
-          role: message.role,
-          content: inSummary
-            ? `${INCREMENTAL_SUMMARY_PREFIX} ${message.content}`
-            : message.content,
-        };
-      }),
-  ];
+  let sendMessages = [summaryIntro, ...messages]
+    .map((message) => getMessageOrSummary(message, session))
+    .map(([message, inSummary]) => {
+      return {
+        role: message.role,
+        content: inSummary
+          ? `${INCREMENTAL_SUMMARY_PREFIX} ${message.content}`
+          : message.content,
+      };
+    });
 
   const modelConfig = {
     ...useAppConfig.getState().modelConfig,
