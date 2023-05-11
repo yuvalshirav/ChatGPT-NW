@@ -557,6 +557,9 @@ export function Chat() {
   };
 
   const getTokenFooter = (message: Message) => {
+    if (!message.nTokens) {
+      return "";
+    }
     if (message.summary && message.useSummary) {
       return `${message.nSummaryTokens}/${message.nTokens} tokens (summarized)`;
     } else {

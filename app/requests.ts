@@ -41,7 +41,6 @@ const makeRequestParam = (
           content: inSummary
             ? `${INCREMENTAL_SUMMARY_PREFIX} ${message.content}`
             : message.content,
-          date: message.date,
         };
       }),
   ];
@@ -389,7 +388,7 @@ export function summarizeMessageIncrementally(
       message.useSummary = true;
       message.nSummaryTokens = response?.usage?.completion_tokens;
       console.log("Summary:");
-      console.log(summary);
+      console.log("Summary:");
     }
     return message;
   });
