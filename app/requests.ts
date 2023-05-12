@@ -355,15 +355,15 @@ export function summarizeMessageIncrementally(
   return requestChat(
     [
       ...systemMessages,
-      {
-        role: "system",
-        content: Locale.Store.Prompt.SummarizeIncremental,
-        date: "",
-      },
       ...session.messages
-        .slice(0, i + 1)
+        .slice(0, i)
         .map((message) => getMessageOrSummary(message, session, false))
         .map(([message, inSummaryMode]) => message),
+      {
+        role: "user",
+        content: Locale.Store.Prompt.SummarizeIncremental + message.content,
+        date: message.date,
+      },
     ],
     {
       model: "gpt-4",
