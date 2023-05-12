@@ -35,6 +35,7 @@ import {
   SummaryLevel,
   DEFAULT_TOPIC,
   countTotalTokens,
+  ChatSession,
 } from "../store";
 
 import {
@@ -47,7 +48,7 @@ import {
 
 import dynamic from "next/dynamic";
 
-import { ControllerPool } from "../requests";
+import { ControllerPool, summarizeMessage } from "../requests";
 import { Prompt, usePromptStore } from "../store/prompt";
 import Locale from "../locales";
 
@@ -550,10 +551,14 @@ export function Chat() {
     deleteMessage(userIndex);
   };
 
-  const onToggleSummary = (message: Message) => {
-    chatStore.updateCurrentSession(
-      (session) => (message.useSummary = !message.useSummary),
-    );
+  const onToggleSummary = (message: Message, session: ChatSession) => {
+    chatStore.updateCurrentSession((session) => {
+      if (message.summary) {
+        message.useSummary = !message.useSummary;
+      } else {
+        summarizeMessage(message, session);
+      }
+    });
   };
 
   const getTokenFooter = (message: Message) => {
@@ -758,7 +763,7 @@ export function Chat() {
                         <>
                           <div
                             className={styles["chat-message-top-action"]}
-                            onClick={() => onToggleSummary(message)}
+                            onClick={() => onToggleSummary(message, session)}
                           >
                             {message.summary && message.useSummary
                               ? "Unsummarize"

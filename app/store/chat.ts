@@ -314,18 +314,18 @@ export const useChatStore = create<ChatStore>()(
         get().updateCurrentSession((session) => {
           session.messages.push(userMessage);
           session.messages.push(botMessage);
-          summarizeMessageIncrementally(userMessage, session).then((updated) =>
-            get().updateCurrentSession((session) => {
-              let message: Message = session.messages.filter(
-                (m) => m.id == updated?.id,
-              )[0];
-              if (message && updated && updated.useSummary) {
-                message.summary = updated.summary;
-                message.useSummary = updated.useSummary;
-                message.nSummaryTokens = updated.nSummaryTokens;
-              }
-            }),
-          );
+          // summarizeMessageIncrementally(userMessage, session).then((updated) =>
+          //   get().updateCurrentSession((session) => {
+          //     let message: Message = session.messages.filter(
+          //       (m) => m.id == updated?.id,
+          //     )[0];
+          //     if (message && updated && updated.useSummary) {
+          //       message.summary = updated.summary;
+          //       message.useSummary = updated.useSummary;
+          //       message.nSummaryTokens = updated.nSummaryTokens;
+          //     }
+          //   }),
+          // );
         });
 
         let summaryIntro: Message = {
@@ -347,19 +347,19 @@ export const useChatStore = create<ChatStore>()(
             if (done) {
               botMessage.streaming = false;
               botMessage.content = content;
-              summarizeMessageIncrementally(botMessage, session).then(
-                (updated) =>
-                  get().updateCurrentSession((session) => {
-                    let message: Message = session.messages.filter(
-                      (m) => m.id == updated?.id,
-                    )[0];
-                    if (message && updated && updated.useSummary) {
-                      message.summary = updated.summary;
-                      message.useSummary = updated.useSummary;
-                      message.nSummaryTokens = updated.nSummaryTokens;
-                    }
-                  }),
-              );
+              // summarizeMessageIncrementally(botMessage, session).then(
+              //   (updated) =>
+              //     get().updateCurrentSession((session) => {
+              //       let message: Message = session.messages.filter(
+              //         (m) => m.id == updated?.id,
+              //       )[0];
+              //       if (message && updated && updated.useSummary) {
+              //         message.summary = updated.summary;
+              //         message.useSummary = updated.useSummary;
+              //         message.nSummaryTokens = updated.nSummaryTokens;
+              //       }
+              //     }),
+              // );
               annotateTokenCount(botMessage).then((updated) =>
                 get().updateCurrentSession((session) => {
                   let message: Message = session.messages.filter(

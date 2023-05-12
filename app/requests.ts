@@ -341,9 +341,9 @@ export function summarizeMessageIncrementally(
   //   return Promise.resolve(message);
   // }
 
-  if (message.content.length < 100) {
-    return Promise.resolve(message);
-  }
+  // if (message.content.length < 100) {
+  //   return Promise.resolve(message);
+  // }
 
   let systemMessages: Message[] = session.mask.context.filter(
     (message) => message.role == "system",
@@ -381,6 +381,22 @@ export function summarizeMessageIncrementally(
       console.log(summary);
     }
     return message;
+  });
+}
+
+export function summarizeMessage(
+  messageForSummary: Message,
+  session: ChatSession,
+) {
+  summarizeMessageIncrementally(messageForSummary, session).then((updated) => {
+    let message: Message = session.messages.filter(
+      (m) => m.id == updated?.id,
+    )[0];
+    if (message && updated) {
+      message.summary = updated.summary;
+      message.useSummary = updated.useSummary;
+      message.nSummaryTokens = updated.nSummaryTokens;
+    }
   });
 }
 
