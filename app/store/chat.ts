@@ -292,7 +292,7 @@ export const useChatStore = create<ChatStore>()(
             )[0];
             if (message && updated) {
               message.summary = updated.summary;
-              message.useSummary = true;
+              message.useSummary = updated.useSummary;
               message.nSummaryTokens = updated.nSummaryTokens;
             }
           }),
@@ -354,7 +354,7 @@ export const useChatStore = create<ChatStore>()(
                     )[0];
                     if (message && updated) {
                       message.summary = updated.summary;
-                      message.useSummary = true;
+                      message.useSummary = updated.useSummary;
                       message.nSummaryTokens = updated.nSummaryTokens;
                     }
                   }),
