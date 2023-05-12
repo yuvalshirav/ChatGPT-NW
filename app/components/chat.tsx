@@ -652,7 +652,9 @@ export function Chat() {
           >
             {!session.topic ? DEFAULT_TOPIC : session.topic}
           </div>
-          <div className="window-header-sub-title">{percentMem + "%"}</div>
+          <div className="window-header-sub-title">
+            {percentMem + "%"} memory usage
+          </div>
         </div>
         <div className="window-actions">
           <div className={"window-action-button" + " " + styles.mobile}>
