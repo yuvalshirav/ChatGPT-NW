@@ -557,12 +557,14 @@ export function Chat() {
   };
 
   const getTokenFooter = (message: Message) => {
-    let tokens =
-      message.summary && message.useSummary
-        ? message.nSummaryTokens || 0
-        : message.nTokens || 0;
-    let p = Math.round((tokens / (8 * 1024)) * 100);
-    return `${p}%`;
+    if (!message.nTokens) {
+      return "";
+    }
+    if (message.summary && message.useSummary) {
+      return `${message.nSummaryTokens}/${message.nTokens} tokens (summarized)`;
+    } else {
+      return `${message.nTokens} tokens`;
+    }
   };
 
   const onResend = (botMessageId: number) => {
@@ -636,6 +638,9 @@ export function Chat() {
   const autoFocus = !isMobileScreen || isChat; // only focus in chat page
 
   let [nPromptTokens, nCompletionTokens] = countTotalTokens(messages, session);
+  let percentMem = Math.round(
+    ((nPromptTokens + nCompletionTokens) / (8 * 1024)) * 100,
+  );
 
   return (
     <div className={styles.chat} key={session.id}>
@@ -647,12 +652,7 @@ export function Chat() {
           >
             {!session.topic ? DEFAULT_TOPIC : session.topic}
           </div>
-          <div className="window-header-sub-title">
-            {nPromptTokens +
-              " prompt tokens | " +
-              nCompletionTokens +
-              " completion tokens"}
-          </div>
+          <div className="window-header-sub-title">{percentMem + "%"}</div>
         </div>
         <div className="window-actions">
           <div className={"window-action-button" + " " + styles.mobile}>
