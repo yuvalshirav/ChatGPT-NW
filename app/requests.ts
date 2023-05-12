@@ -337,14 +337,11 @@ export function summarizeMessageIncrementally(
   message: Message,
   session: ChatSession,
 ): Promise<Message | undefined | null> {
-  if (session.mask.modelConfig.summaryLevel != SummaryLevel.Incremental) {
-    return Promise.resolve(message);
-  }
+  // if (session.mask.modelConfig.summaryLevel != SummaryLevel.Incremental) {
+  //   return Promise.resolve(message);
+  // }
 
-  if (
-    message.content.length <
-    session.mask.modelConfig.compressMessageLengthThreshold
-  ) {
+  if (message.content.length < 50) {
     return Promise.resolve(message);
   }
 
@@ -380,7 +377,7 @@ export function summarizeMessageIncrementally(
       message.useSummary = true;
       message.nSummaryTokens = response?.usage?.completion_tokens;
       console.log("Summary:");
-      console.log("Summary:");
+      console.log(summary);
     }
     return message;
   });
