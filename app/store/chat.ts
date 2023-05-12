@@ -290,6 +290,10 @@ export const useChatStore = create<ChatStore>()(
             let message: Message = session.messages.filter(
               (m) => m.id == updated?.id,
             )[0];
+            if (!message) {
+              console.log("Can't find message");
+              console.log(userMessage);
+            }
             if (message && updated && updated.useSummary) {
               message.summary = updated.summary;
               message.useSummary = updated.useSummary;
@@ -352,6 +356,10 @@ export const useChatStore = create<ChatStore>()(
                     let message: Message = session.messages.filter(
                       (m) => m.id == updated?.id,
                     )[0];
+                    if (!message) {
+                      console.log("Can't find message");
+                      console.log(botMessage);
+                    }
                     if (message && updated && updated.useSummary) {
                       message.summary = updated.summary;
                       message.useSummary = updated.useSummary;
