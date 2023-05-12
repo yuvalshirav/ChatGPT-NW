@@ -337,7 +337,6 @@ export function summarizeMessageIncrementally(
   message: Message,
   session: ChatSession,
 ): Promise<Message | undefined | null> {
-  return Promise.resolve(message);
   if (session.mask.modelConfig.summaryLevel != SummaryLevel.Incremental) {
     return Promise.resolve(message);
   }

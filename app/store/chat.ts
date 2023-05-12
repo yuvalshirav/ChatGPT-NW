@@ -329,7 +329,7 @@ export const useChatStore = create<ChatStore>()(
 
         let summaryIntro: Message = {
           role: "system",
-          content: `Note that any message prefixed by "${INCREMENTAL_SUMMARY_PREFIX}" has been previously summarized by you, so it does not appear in full or in the original form.`,
+          content: `Note that any message prefixed by "${INCREMENTAL_SUMMARY_PREFIX}" has been previously summarized by you, so it does not appear in full or in the original form. Do not prefix your responses with "${INCREMENTAL_SUMMARY_PREFIX}".`,
           date: "",
         };
         const sendMessages = [

@@ -18,7 +18,7 @@ export enum Theme {
 
 export enum SummaryLevel {
   Incremental = "incremental",
-  Cumulative = "cumulative",
+  //Cumulative = "cumulative",
   NoSummary = "none",
 }
 
@@ -27,7 +27,7 @@ export const DEFAULT_CONFIG = {
   avatar: "1f603",
   fontSize: 14,
   theme: Theme.Auto as Theme,
-  tightBorder: true,
+  tightBorder: false,
   sendPreviewBubble: false,
   sidebarWidth: 300,
 
