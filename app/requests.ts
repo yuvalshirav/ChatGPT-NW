@@ -26,12 +26,7 @@ const makeRequestParam = (
   },
 ): ChatRequest => {
   let session = useChatStore.getState().currentSession();
-  let summaryIntro: Message = {
-    role: "system",
-    content: `Note that any message prefixed by "${INCREMENTAL_SUMMARY_PREFIX}" has been previously summarized by you, so it does not appear in full or in the original form.`,
-    date: "",
-  };
-  let sendMessages = [summaryIntro, ...messages]
+  let sendMessages = messages
     .map((message) => getMessageOrSummary(message, session))
     .map(([message, inSummary]) => {
       return {
@@ -290,12 +285,12 @@ export function annotateTokenCount(
   if (!message.content) {
     return Promise.resolve(message);
   }
-  const shuffledText = shuffleWords(message.content);
+  const sortedText = message.content.split(" ").sort().join(" ");
   return requestChat(
     [
       {
         role: "user",
-        content: `${shuffledText}\nNevermind`,
+        content: `${sortedText}\n\nIs this sorted?`,
         date: "",
       },
     ],
@@ -389,20 +384,6 @@ export function summarizeMessageIncrementally(
     }
     return message;
   });
-}
-
-function shuffleWords(input: string): string {
-  // Split string into words
-  let words = input.split(" ");
-
-  // Shuffle array in-place
-  for (let i = words.length - 1; i > 0; i--) {
-    let j = Math.floor(Math.random() * (i + 1));
-    [words[i], words[j]] = [words[j], words[i]];
-  }
-
-  // Rejoin words into a string
-  return words.join(" ");
 }
 
 // To store message streaming controller

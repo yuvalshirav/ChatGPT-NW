@@ -11,6 +11,7 @@ import {
   summarizeMessageIncrementally,
 } from "../requests";
 import { isMobileScreen, trimTopic } from "../utils";
+import { INCREMENTAL_SUMMARY_PREFIX } from "../constant";
 
 import Locale from "../locales";
 import { showToast } from "../components/ui-lib";
@@ -285,10 +286,14 @@ export const useChatStore = create<ChatStore>()(
           content,
         });
         summarizeMessageIncrementally(userMessage, session).then((message) =>
-          get().updateCurrentSession((session) => {}),
+          get().updateCurrentSession(
+            (session) => (session.lastUpdate = Date.now()),
+          ),
         );
         annotateTokenCount(userMessage).then((message) =>
-          get().updateCurrentSession((session) => {}),
+          get().updateCurrentSession(
+            (session) => (session.lastUpdate = Date.now()),
+          ),
         );
 
         const botMessage: Message = createMessage({
@@ -310,7 +315,16 @@ export const useChatStore = create<ChatStore>()(
           session.messages.push(botMessage);
         });
 
-        const sendMessages = [...session.mask.context, ...session.messages];
+        let summaryIntro: Message = {
+          role: "system",
+          content: `Note that any message prefixed by "${INCREMENTAL_SUMMARY_PREFIX}" has been previously summarized by you, so it does not appear in full or in the original form.`,
+          date: "",
+        };
+        const sendMessages = [
+          summaryIntro,
+          ...session.mask.context,
+          ...session.messages,
+        ];
 
         // make request
         console.log("[User Input] ", sendMessages);
@@ -321,10 +335,15 @@ export const useChatStore = create<ChatStore>()(
               botMessage.streaming = false;
               botMessage.content = content;
               summarizeMessageIncrementally(botMessage, session).then(
-                (message) => get().updateCurrentSession((session) => {}),
+                (message) =>
+                  get().updateCurrentSession(
+                    (session) => (session.lastUpdate = Date.now()),
+                  ),
               );
               annotateTokenCount(userMessage).then((message) =>
-                get().updateCurrentSession((session) => {}),
+                get().updateCurrentSession(
+                  (session) => (session.lastUpdate = Date.now()),
+                ),
               );
               get().onNewMessage(botMessage);
               ControllerPool.remove(
