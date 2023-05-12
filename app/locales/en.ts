@@ -180,13 +180,12 @@ const en = {
       Summarize:
         "Summarize our discussion briefly in 200 words or less to use as a prompt for future context.",
       SummarizeIncremental:
-        "In context of the conversation so far, please summarize concisely the message under the three * characters and until the message ends. Follow these rules:\n" +
-        "- Leave intact (include without summarizing) any content in triple backticks or quotes.\n" +
+        "In context of the conversation so far, please summarize concisely the following (next) message (which may be the user's or the AI's). Follow these rules:\n" +
+        "- Leave intact (include in full, without summarizing) any content in triple backticks or quotes.\n" +
         "- Leave intact any computer code or SQL.\n" +
-        "- Leave intact any texts under discussion or generation, such as literary texts (stories, poems, quotes, translations, snippets, emails etc.).\n" +
+        "- Leave intact any texts, such as stories, poems, quotes, translations, snippets, emails etc.\n" +
         "- Consider the context from earlier messages, which will always be supplied with the requested summary (i.e., so no need to repeat context already evident from earlier messages).\n" +
-        "- Provide only the summary, without introduction or response.\n\n" +
-        "***\n",
+        "- Provide only the summary, without introduction or response.",
     },
   },
   Copy: {

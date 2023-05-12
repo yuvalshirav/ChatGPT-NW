@@ -360,10 +360,11 @@ export function summarizeMessageIncrementally(
         .map((message) => getMessageOrSummary(message, session, false))
         .map(([message, inSummaryMode]) => message),
       {
-        role: "user",
-        content: Locale.Store.Prompt.SummarizeIncremental + message.content,
+        role: "system",
+        content: Locale.Store.Prompt.SummarizeIncremental,
         date: message.date,
       },
+      getMessageOrSummary(message, session)[0],
     ],
     {
       model: "gpt-4",
