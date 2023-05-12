@@ -290,7 +290,7 @@ export const useChatStore = create<ChatStore>()(
             let message: Message = session.messages.filter(
               (m) => m.id == updated?.id,
             )[0];
-            if (message && updated) {
+            if (message && updated && updated.useSummary) {
               message.summary = updated.summary;
               message.useSummary = updated.useSummary;
               message.nSummaryTokens = updated.nSummaryTokens;
@@ -352,7 +352,7 @@ export const useChatStore = create<ChatStore>()(
                     let message: Message = session.messages.filter(
                       (m) => m.id == updated?.id,
                     )[0];
-                    if (message && updated) {
+                    if (message && updated && updated.useSummary) {
                       message.summary = updated.summary;
                       message.useSummary = updated.useSummary;
                       message.nSummaryTokens = updated.nSummaryTokens;
