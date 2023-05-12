@@ -808,7 +808,9 @@ export function Chat() {
                 {!message.preview ? (
                   <div className={styles["chat-message-actions"]}>
                     <div className={styles["chat-message-action-date"]}>
-                      {getTokenFooter(message)}
+                      {message.summary && message.useSummary
+                        ? getTokenFooter(message)
+                        : getTokenFooter(message)}
                     </div>
                   </div>
                 ) : null}
