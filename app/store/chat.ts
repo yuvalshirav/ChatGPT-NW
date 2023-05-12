@@ -285,15 +285,27 @@ export const useChatStore = create<ChatStore>()(
           role: "user",
           content,
         });
-        summarizeMessageIncrementally(userMessage, session).then((message) =>
-          get().updateCurrentSession(
-            (session) => (session.lastUpdate = Date.now()),
-          ),
+        summarizeMessageIncrementally(userMessage, session).then((updated) =>
+          get().updateCurrentSession((session) => {
+            let message: Message = session.messages.filter(
+              (m) => m.id == updated?.id,
+            )[0];
+            if (message && updated) {
+              message.summary = updated.summary;
+              message.useSummary = true;
+              message.nSummaryTokens = updated.nSummaryTokens;
+            }
+          }),
         );
-        annotateTokenCount(userMessage).then((message) =>
-          get().updateCurrentSession(
-            (session) => (session.lastUpdate = Date.now()),
-          ),
+        annotateTokenCount(userMessage).then((updated) =>
+          get().updateCurrentSession((session) => {
+            let message: Message = session.messages.filter(
+              (m) => m.id == updated?.id,
+            )[0];
+            if (message && updated) {
+              message.nTokens = updated.nTokens;
+            }
+          }),
         );
 
         const botMessage: Message = createMessage({
@@ -335,15 +347,27 @@ export const useChatStore = create<ChatStore>()(
               botMessage.streaming = false;
               botMessage.content = content;
               summarizeMessageIncrementally(botMessage, session).then(
-                (message) =>
-                  get().updateCurrentSession(
-                    (session) => (session.lastUpdate = Date.now()),
-                  ),
+                (updated) =>
+                  get().updateCurrentSession((session) => {
+                    let message: Message = session.messages.filter(
+                      (m) => m.id == updated?.id,
+                    )[0];
+                    if (message && updated) {
+                      message.summary = updated.summary;
+                      message.useSummary = true;
+                      message.nSummaryTokens = updated.nSummaryTokens;
+                    }
+                  }),
               );
-              annotateTokenCount(userMessage).then((message) =>
-                get().updateCurrentSession(
-                  (session) => (session.lastUpdate = Date.now()),
-                ),
+              annotateTokenCount(botMessage).then((updated) =>
+                get().updateCurrentSession((session) => {
+                  let message: Message = session.messages.filter(
+                    (m) => m.id == updated?.id,
+                  )[0];
+                  if (message && updated) {
+                    message.nTokens = updated.nTokens;
+                  }
+                }),
               );
               get().onNewMessage(botMessage);
               ControllerPool.remove(
