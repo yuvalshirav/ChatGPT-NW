@@ -180,7 +180,7 @@ const en = {
       Summarize:
         "Summarize our discussion briefly in 200 words or less to use as a prompt for future context.",
       SummarizeIncremental:
-        "As an expert summarizer, your task is to create concise summaries of the last message in the context of previous messages. Avoid summarizing content within triple backticks, quotes, code, sql or texts (literary text, emails, etc.) under discussion. These should be included in the summary in full. Provide only the summary, without introduction or response, considering the context from earlier messages.",
+        "As an expert summarizer, your task is to create concise summaries of the last message in the context of previous messages. Do not summarize content enclosed in triple backticks or quotes, computer code, SQL, or works under discussion (e.g. literary texts, emails etc.). Provide only the summary, without introduction or response, considering the context from earlier messages, which will always be supplied with the requested summary.",
     },
   },
   Copy: {

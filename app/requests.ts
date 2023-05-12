@@ -341,7 +341,7 @@ export function summarizeMessageIncrementally(
     return Promise.resolve(message);
   }
 
-  if (message.content.length < 50) {
+  if (message.content.length < 100) {
     return Promise.resolve(message);
   }
 
