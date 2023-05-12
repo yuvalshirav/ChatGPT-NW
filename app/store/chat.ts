@@ -285,22 +285,7 @@ export const useChatStore = create<ChatStore>()(
           role: "user",
           content,
         });
-        summarizeMessageIncrementally(userMessage, session).then((updated) =>
-          get().updateCurrentSession((session) => {
-            let message: Message = session.messages.filter(
-              (m) => m.id == updated?.id,
-            )[0];
-            if (!message) {
-              console.log("Can't find message");
-              console.log(userMessage);
-            }
-            if (message && updated && updated.useSummary) {
-              message.summary = updated.summary;
-              message.useSummary = updated.useSummary;
-              message.nSummaryTokens = updated.nSummaryTokens;
-            }
-          }),
-        );
+
         annotateTokenCount(userMessage).then((updated) =>
           get().updateCurrentSession((session) => {
             let message: Message = session.messages.filter(
@@ -329,6 +314,18 @@ export const useChatStore = create<ChatStore>()(
         get().updateCurrentSession((session) => {
           session.messages.push(userMessage);
           session.messages.push(botMessage);
+          summarizeMessageIncrementally(userMessage, session).then((updated) =>
+            get().updateCurrentSession((session) => {
+              let message: Message = session.messages.filter(
+                (m) => m.id == updated?.id,
+              )[0];
+              if (message && updated && updated.useSummary) {
+                message.summary = updated.summary;
+                message.useSummary = updated.useSummary;
+                message.nSummaryTokens = updated.nSummaryTokens;
+              }
+            }),
+          );
         });
 
         let summaryIntro: Message = {
@@ -356,10 +353,6 @@ export const useChatStore = create<ChatStore>()(
                     let message: Message = session.messages.filter(
                       (m) => m.id == updated?.id,
                     )[0];
-                    if (!message) {
-                      console.log("Can't find message");
-                      console.log(botMessage);
-                    }
                     if (message && updated && updated.useSummary) {
                       message.summary = updated.summary;
                       message.useSummary = updated.useSummary;
