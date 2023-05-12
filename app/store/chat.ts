@@ -274,7 +274,7 @@ export const useChatStore = create<ChatStore>()(
           session.lastUpdate = Date.now();
         });
         get().updateStat(message);
-        //get().summarizeSession();
+        get().summarizeSession();
       },
 
       async onUserInput(content) {
@@ -533,6 +533,9 @@ export const useChatStore = create<ChatStore>()(
             );
           });
         }
+
+        // TODO
+        return;
 
         const modelConfig = session.mask.modelConfig;
         let toBeSummarizedMsgs = session.messages.slice(
