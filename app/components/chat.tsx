@@ -557,14 +557,12 @@ export function Chat() {
   };
 
   const getTokenFooter = (message: Message) => {
-    if (!message.nTokens) {
-      return "";
-    }
-    if (message.summary && message.useSummary) {
-      return `${message.nSummaryTokens}/${message.nTokens} tokens (summarized)`;
-    } else {
-      return `${message.nTokens} tokens`;
-    }
+    let tokens =
+      message.summary && message.useSummary
+        ? message.nSummaryTokens || 0
+        : message.nTokens || 0;
+    let p = Math.round((tokens / (8 * 1024)) * 100);
+    return `${p}%`;
   };
 
   const onResend = (botMessageId: number) => {
