@@ -367,7 +367,7 @@ export function summarizeMessageIncrementally(
     ],
     {
       model: "gpt-4",
-      temperature: 0.7,
+      temperature: 1,
       presencePenalty: 0,
     },
   ).then((response) => {
