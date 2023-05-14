@@ -6,7 +6,7 @@ import {
   ControllerPool,
   requestChatStream,
   requestWithPrompt,
-  annotateTokenCount,
+  requestTokenCount,
   requestChat,
   summarizeMessageIncrementally,
 } from "../requests";
@@ -32,6 +32,7 @@ export type Message = ChatCompletionResponseMessage & {
   id?: number;
   model?: ModelType;
   summary?: string;
+  unSummary?: string;
   useSummary?: boolean;
   nTokens?: number;
   nSummaryTokens?: number;
@@ -285,17 +286,18 @@ export const useChatStore = create<ChatStore>()(
           role: "user",
           content,
         });
+        userMessage.unSummary = content;
 
-        annotateTokenCount(userMessage).then((updated) =>
+        requestTokenCount(userMessage).then((nTokens) => {
+          if (!nTokens) return;
+          let message: Message = session.messages.filter(
+            (m) => m.id == userMessage.id,
+          )[0];
+          if (!message) return;
           get().updateCurrentSession((session) => {
-            let message: Message = session.messages.filter(
-              (m) => m.id == updated?.id,
-            )[0];
-            if (message && updated) {
-              message.nTokens = updated.nTokens;
-            }
-          }),
-        );
+            message.nTokens = nTokens;
+          });
+        });
 
         const botMessage: Message = createMessage({
           role: "assistant",
@@ -314,18 +316,6 @@ export const useChatStore = create<ChatStore>()(
         get().updateCurrentSession((session) => {
           session.messages.push(userMessage);
           session.messages.push(botMessage);
-          // summarizeMessageIncrementally(userMessage, session).then((updated) =>
-          //   get().updateCurrentSession((session) => {
-          //     let message: Message = session.messages.filter(
-          //       (m) => m.id == updated?.id,
-          //     )[0];
-          //     if (message && updated && updated.useSummary) {
-          //       message.summary = updated.summary;
-          //       message.useSummary = updated.useSummary;
-          //       message.nSummaryTokens = updated.nSummaryTokens;
-          //     }
-          //   }),
-          // );
         });
 
         let summaryIntro: Message = {
@@ -346,30 +336,17 @@ export const useChatStore = create<ChatStore>()(
             // stream response
             if (done) {
               botMessage.streaming = false;
-              botMessage.content = content;
-              // summarizeMessageIncrementally(botMessage, session).then(
-              //   (updated) =>
-              //     get().updateCurrentSession((session) => {
-              //       let message: Message = session.messages.filter(
-              //         (m) => m.id == updated?.id,
-              //       )[0];
-              //       if (message && updated && updated.useSummary) {
-              //         message.summary = updated.summary;
-              //         message.useSummary = updated.useSummary;
-              //         message.nSummaryTokens = updated.nSummaryTokens;
-              //       }
-              //     }),
-              // );
-              annotateTokenCount(botMessage).then((updated) =>
+              botMessage.unSummary = botMessage.content = content;
+              requestTokenCount(botMessage).then((nTokens) => {
+                if (!nTokens) return;
+                let message: Message = session.messages.filter(
+                  (m) => m.id == botMessage.id,
+                )[0];
+                if (!message) return;
                 get().updateCurrentSession((session) => {
-                  let message: Message = session.messages.filter(
-                    (m) => m.id == updated?.id,
-                  )[0];
-                  if (message && updated) {
-                    message.nTokens = updated.nTokens;
-                  }
-                }),
-              );
+                  message.nTokens = nTokens;
+                });
+              });
               get().onNewMessage(botMessage);
               ControllerPool.remove(
                 sessionIndex,

@@ -553,7 +553,11 @@ export function Chat() {
 
   const onToggleSummary = (message: Message, session: ChatSession) => {
     chatStore.updateCurrentSession((session) => {
-      if (message.summary) {
+      if (message.summary && message.unSummary) {
+        [message.content, message.unSummary] = [
+          message.unSummary,
+          message.content,
+        ];
         message.useSummary = !message.useSummary;
       } else {
         summarizeMessage(message, session);

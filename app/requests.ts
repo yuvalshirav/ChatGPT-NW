@@ -13,8 +13,15 @@ import { showToast } from "./components/ui-lib";
 import { ACCESS_CODE_PREFIX } from "./constant";
 import { INCREMENTAL_SUMMARY_PREFIX } from "./constant";
 import Locale from "./locales";
+import { ChatCompletionRequestMessage } from "openai";
 
 const TIME_OUT_MS = 60000;
+
+export type SummaryResponse = {
+  messageId?: number;
+  summary?: string;
+  nSummaryTokens?: number;
+};
 
 const makeRequestParam = (
   messages: Message[],
@@ -279,33 +286,35 @@ export async function requestWithPrompt(
   return res?.choices?.at(0)?.message?.content ?? "";
 }
 
-export function annotateTokenCount(
-  message: Message,
-): Promise<Message | undefined | null> {
+export function requestTokenCount(message: Message): Promise<number | null> {
   if (!message.content) {
-    return Promise.resolve(message);
+    return Promise.resolve(0);
   }
-  const sortedText = message.content.split(" ").sort().join(" ");
+  const sortedText = message.content
+    .toLowerCase()
+    .replaceAll(",", "!")
+    .split(" ")
+    .sort()
+    .join(",");
   return requestChat(
     [
       {
         role: "user",
-        content: `${sortedText}\n\nIs this sorted?`,
+        content: `Is the following word list sorted?\n\n${sortedText}`,
         date: "",
       },
     ],
     {
       model: "gpt-3.5-turbo",
-      temperature: 0.2,
+      temperature: 0.7,
       presencePenalty: 0,
     },
   ).then((response) => {
     let nTokens = response?.usage?.prompt_tokens;
     if (nTokens) {
-      message.nTokens = nTokens;
-      return message;
+      return nTokens;
     }
-    return message;
+    return null;
   });
 }
 
@@ -336,7 +345,7 @@ export function getMessageOrSummary(
 export function summarizeMessageIncrementally(
   message: Message,
   session: ChatSession,
-): Promise<Message | undefined | null> {
+): Promise<SummaryResponse> {
   // if (session.mask.modelConfig.summaryLevel != SummaryLevel.Incremental) {
   //   return Promise.resolve(message);
   // }
@@ -350,37 +359,30 @@ export function summarizeMessageIncrementally(
   );
   const i = session.messages.indexOf(message);
   if (i == -1) {
-    return Promise.resolve(message);
+    return Promise.resolve({ messageId: message.id });
   }
   return requestChat(
     [
       ...systemMessages,
-      ...session.messages
-        .slice(0, i)
-        .map((message) => getMessageOrSummary(message, session, false))
-        .map(([message, inSummaryMode]) => message),
+      ...session.messages.slice(0, i),
       {
         role: "system",
         content: Locale.Store.Prompt.SummarizeIncremental,
         date: message.date,
       },
-      getMessageOrSummary(message, session)[0],
+      message,
     ],
     {
       model: "gpt-4",
-      temperature: 1,
+      temperature: 0.7,
       presencePenalty: 0,
     },
   ).then((response) => {
-    let summary = response?.choices?.at(0)?.message?.content;
-    if (summary) {
-      message.summary = summary;
-      message.useSummary = true;
-      message.nSummaryTokens = response?.usage?.completion_tokens;
-      console.log("Summary:");
-      console.log(summary);
-    }
-    return message;
+    return {
+      messageId: message.id,
+      summary: response?.choices?.at(0)?.message?.content,
+      nSummaryTokens: response?.usage?.completion_tokens,
+    };
   });
 }
 
@@ -388,16 +390,19 @@ export function summarizeMessage(
   messageForSummary: Message,
   session: ChatSession,
 ) {
-  summarizeMessageIncrementally(messageForSummary, session).then((updated) => {
-    let message: Message = session.messages.filter(
-      (m) => m.id == updated?.id,
-    )[0];
-    if (message && updated) {
-      message.summary = updated.summary;
-      message.useSummary = updated.useSummary;
-      message.nSummaryTokens = updated.nSummaryTokens;
-    }
-  });
+  summarizeMessageIncrementally(messageForSummary, session).then(
+    (summaryResponse) => {
+      if (!summaryResponse.summary) return;
+      let message: Message = session.messages.filter(
+        (m) => m.id == summaryResponse.messageId,
+      )[0];
+      if (message) {
+        message.summary = message.content = summaryResponse.summary;
+        message.useSummary = true;
+        message.nSummaryTokens = summaryResponse.nSummaryTokens;
+      }
+    },
+  );
 }
 
 // To store message streaming controller
