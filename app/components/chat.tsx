@@ -572,7 +572,7 @@ export function Chat() {
       return "";
     }
     if (message.useSummary) {
-      return `${message.nSummaryTokens} tokens`;
+      return `${message.nSummaryTokens}/${message.nTokens} tokens`;
     } else {
       return `${message.nTokens} tokens`;
     }
@@ -746,13 +746,13 @@ export function Chat() {
                 }
               >
                 <div className={styles["chat-message-container"]}>
-                  <div className={styles["chat-message-avatar"]}>
+                  {/*<div className={styles["chat-message-avatar"]}>
                     {message.role === "user" ? (
                       <Avatar avatar={config.avatar} />
                     ) : (
                       <MaskAvatar mask={session.mask} />
                     )}
-                  </div>
+                    </div>*/}
                   {showTyping && (
                     <div className={styles["chat-message-status"]}>
                       {Locale.Chat.Typing}

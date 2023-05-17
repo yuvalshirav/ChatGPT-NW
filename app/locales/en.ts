@@ -180,7 +180,7 @@ const en = {
       Summarize:
         "Summarize our discussion briefly in 200 words or less to use as a prompt for future context.",
       SummarizeIncremental:
-        "As an expert summarizer, your task is to create a concise summary of the following (next) message (which may the AI's or the user's) in the context of previous messages.",
+        "As an expert summarizer, your task is to create a concise summary of the following (next) message (which may the AI's or the user's) in the context of previous messages. Do not reply to the message - summarize it.",
     },
   },
   Copy: {
