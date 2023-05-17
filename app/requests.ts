@@ -14,6 +14,7 @@ import { ACCESS_CODE_PREFIX } from "./constant";
 import { INCREMENTAL_SUMMARY_PREFIX } from "./constant";
 import Locale from "./locales";
 import { ChatCompletionRequestMessage } from "openai";
+import { useSubmit } from "react-router-dom";
 
 const TIME_OUT_MS = 60000;
 
@@ -33,16 +34,14 @@ const makeRequestParam = (
   },
 ): ChatRequest => {
   let session = useChatStore.getState().currentSession();
-  let sendMessages = messages
-    .map((message) => getMessageOrSummary(message, session))
-    .map(([message, inSummary]) => {
-      return {
-        role: message.role,
-        content: inSummary
-          ? `${INCREMENTAL_SUMMARY_PREFIX} ${message.content}`
-          : message.content,
-      };
-    });
+  let sendMessages = messages.map((message) => {
+    return {
+      role: message.role,
+      content: message.useSummary
+        ? `${INCREMENTAL_SUMMARY_PREFIX} ${message.summary}`
+        : message.content,
+    };
+  });
 
   const modelConfig = {
     ...useAppConfig.getState().modelConfig,
@@ -318,30 +317,6 @@ export function requestTokenCount(message: Message): Promise<number | null> {
   });
 }
 
-export function isMessageInSummaryMode(
-  message: Message,
-  session: ChatSession,
-  checkFlag: boolean = false,
-): boolean {
-  return (message.summary && (!checkFlag || message.useSummary)) || false;
-}
-
-export function getMessageOrSummary(
-  message: Message,
-  session: ChatSession,
-  checkFlag: boolean = false,
-): [Message, boolean] {
-  let inSummaryMode = isMessageInSummaryMode(message, session, checkFlag);
-  return [
-    {
-      role: message.role,
-      content: (inSummaryMode ? message.summary : message.content) || "",
-      date: message.date,
-    },
-    inSummaryMode,
-  ];
-}
-
 export function summarizeMessageIncrementally(
   message: Message,
   session: ChatSession,
@@ -364,7 +339,7 @@ export function summarizeMessageIncrementally(
   return requestChat(
     [
       ...systemMessages,
-      ...session.messages.slice(0, i),
+      ...session.messages.slice(0, i).filter((message) => !message.hidden),
       {
         role: "system",
         content: Locale.Store.Prompt.SummarizeIncremental,
@@ -397,7 +372,7 @@ export function summarizeMessage(
         (m) => m.id == summaryResponse.messageId,
       )[0];
       if (message) {
-        message.summary = message.content = summaryResponse.summary;
+        message.summary = summaryResponse.summary;
         message.useSummary = true;
         message.nSummaryTokens = summaryResponse.nSummaryTokens;
       }

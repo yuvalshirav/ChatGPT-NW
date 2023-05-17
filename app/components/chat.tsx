@@ -553,11 +553,7 @@ export function Chat() {
 
   const onToggleSummary = (message: Message, session: ChatSession) => {
     chatStore.updateCurrentSession((session) => {
-      if (message.summary && message.unSummary) {
-        [message.content, message.unSummary] = [
-          message.unSummary,
-          message.content,
-        ];
+      if (message.summary) {
         message.useSummary = !message.useSummary;
       } else {
         summarizeMessage(message, session);
@@ -565,12 +561,18 @@ export function Chat() {
     });
   };
 
+  const onToggleHide = (message: Message, session: ChatSession) => {
+    chatStore.updateCurrentSession((session) => {
+      message.hidden = !message.hidden;
+    });
+  };
+
   const getTokenFooter = (message: Message) => {
     if (!message.nTokens) {
       return "";
     }
-    if (message.summary && message.useSummary) {
-      return `${message.nSummaryTokens}/${message.nTokens} tokens (summarized)`;
+    if (message.useSummary) {
+      return `${message.nSummaryTokens} tokens`;
     } else {
       return `${message.nTokens} tokens`;
     }
@@ -736,91 +738,103 @@ export function Chat() {
           return (
             <div
               key={i}
-              className={
-                isUser ? styles["chat-message-user"] : styles["chat-message"]
-              }
+              className={message.hidden ? styles["chat-message-hidden"] : ""}
             >
-              <div className={styles["chat-message-container"]}>
-                <div className={styles["chat-message-avatar"]}>
-                  {message.role === "user" ? (
-                    <Avatar avatar={config.avatar} />
-                  ) : (
-                    <MaskAvatar mask={session.mask} />
-                  )}
-                </div>
-                {showTyping && (
-                  <div className={styles["chat-message-status"]}>
-                    {Locale.Chat.Typing}
+              <div
+                className={
+                  isUser ? styles["chat-message-user"] : styles["chat-message"]
+                }
+              >
+                <div className={styles["chat-message-container"]}>
+                  <div className={styles["chat-message-avatar"]}>
+                    {message.role === "user" ? (
+                      <Avatar avatar={config.avatar} />
+                    ) : (
+                      <MaskAvatar mask={session.mask} />
+                    )}
                   </div>
-                )}
-                <div className={styles["chat-message-item"]}>
-                  {showActions && (
-                    <div className={styles["chat-message-top-actions"]}>
-                      {message.streaming && !isUser ? (
-                        <div
-                          className={styles["chat-message-top-action"]}
-                          onClick={() => onUserStop(message.id ?? i)}
-                        >
-                          {Locale.Chat.Actions.Stop}
-                        </div>
-                      ) : (
-                        <>
+                  {showTyping && (
+                    <div className={styles["chat-message-status"]}>
+                      {Locale.Chat.Typing}
+                    </div>
+                  )}
+                  <div className={styles["chat-message-item"]}>
+                    {showActions && (
+                      <div className={styles["chat-message-top-actions"]}>
+                        {message.streaming && !isUser ? (
                           <div
                             className={styles["chat-message-top-action"]}
-                            onClick={() => onToggleSummary(message, session)}
+                            onClick={() => onUserStop(message.id ?? i)}
                           >
-                            {message.summary && message.useSummary
-                              ? "Unsummarize"
-                              : "Summarize"}
+                            {Locale.Chat.Actions.Stop}
                           </div>
-                          <div
-                            className={styles["chat-message-top-action"]}
-                            onClick={() => onDelete(message.id ?? i)}
-                          >
-                            {Locale.Chat.Actions.Delete}
-                          </div>
-                          {!isUser ? (
+                        ) : (
+                          <>
                             <div
                               className={styles["chat-message-top-action"]}
-                              onClick={() => onResend(message.id ?? i)}
+                              onClick={() => onToggleHide(message, session)}
                             >
-                              {Locale.Chat.Actions.Retry}
+                              {message.hidden ? "Show" : "Hide"}
                             </div>
-                          ) : null}
-                        </>
-                      )}
+                            <div
+                              className={styles["chat-message-top-action"]}
+                              onClick={() => onToggleSummary(message, session)}
+                            >
+                              {message.useSummary ? "Unsummarize" : "Summarize"}
+                            </div>
+                            <div
+                              className={styles["chat-message-top-action"]}
+                              onClick={() => onDelete(message.id ?? i)}
+                            >
+                              {Locale.Chat.Actions.Delete}
+                            </div>
+                            {!isUser ? (
+                              <div
+                                className={styles["chat-message-top-action"]}
+                                onClick={() => onResend(message.id ?? i)}
+                              >
+                                {Locale.Chat.Actions.Retry}
+                              </div>
+                            ) : null}
+                          </>
+                        )}
 
-                      <div
-                        className={styles["chat-message-top-action"]}
-                        onClick={() => copyToClipboard(message.content)}
-                      >
-                        {Locale.Chat.Actions.Copy}
+                        <div
+                          className={styles["chat-message-top-action"]}
+                          onClick={() => copyToClipboard(message.content)}
+                        >
+                          {Locale.Chat.Actions.Copy}
+                        </div>
+                      </div>
+                    )}
+                    <Markdown
+                      content={
+                        message.useSummary
+                          ? message.summary ?? message.content
+                          : message.content
+                      }
+                      loading={
+                        (message.preview || message.content.length === 0) &&
+                        !isUser
+                      }
+                      onContextMenu={(e) => onRightClick(e, message)}
+                      onDoubleClickCapture={() => {
+                        if (!isMobileScreen) return;
+                        setUserInput(message.content);
+                      }}
+                      fontSize={fontSize}
+                      parentRef={scrollRef}
+                      defaultShow={i >= messages.length - 10}
+                    />
+                  </div>
+                  {!message.preview ? (
+                    <div className={styles["chat-message-actions"]}>
+                      <div className={styles["chat-message-action-date"]}>
+                        {getTokenFooter(message)}
                       </div>
                     </div>
-                  )}
-                  <Markdown
-                    content={message.content}
-                    loading={
-                      (message.preview || message.content.length === 0) &&
-                      !isUser
-                    }
-                    onContextMenu={(e) => onRightClick(e, message)}
-                    onDoubleClickCapture={() => {
-                      if (!isMobileScreen) return;
-                      setUserInput(message.content);
-                    }}
-                    fontSize={fontSize}
-                    parentRef={scrollRef}
-                    defaultShow={i >= messages.length - 10}
-                  />
+                  ) : null}
                 </div>
-                {!message.preview ? (
-                  <div className={styles["chat-message-actions"]}>
-                    <div className={styles["chat-message-action-date"]}>
-                      {getTokenFooter(message)}
-                    </div>
-                  </div>
-                ) : null}
               </div>
             </div>
           );

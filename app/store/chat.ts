@@ -32,10 +32,10 @@ export type Message = ChatCompletionResponseMessage & {
   id?: number;
   model?: ModelType;
   summary?: string;
-  unSummary?: string;
   useSummary?: boolean;
   nTokens?: number;
   nSummaryTokens?: number;
+  hidden?: boolean;
 };
 
 export function createMessage(override: Partial<Message>): Message {
@@ -55,17 +55,18 @@ export function countTotalTokens(
   let nPromptTokens: number = 0;
   let nCompletionTokens: number = 0;
 
-  [...session.mask.context, ...messages].forEach((message) => {
-    let nTokens =
-      message.summary && message.useSummary && message.nSummaryTokens
+  [...session.mask.context, ...messages]
+    .filter((message) => !message.hidden)
+    .forEach((message) => {
+      let nTokens = message.useSummary
         ? message.nSummaryTokens
         : message.nTokens;
-    if (message.role != "user") {
-      nCompletionTokens += nTokens ?? 0;
-    } else {
-      nPromptTokens += nTokens ?? 0;
-    }
-  });
+      if (message.role != "user") {
+        nCompletionTokens += nTokens ?? 0;
+      } else {
+        nPromptTokens += nTokens ?? 0;
+      }
+    });
 
   return [nPromptTokens, nCompletionTokens];
 }
@@ -286,7 +287,6 @@ export const useChatStore = create<ChatStore>()(
           role: "user",
           content,
         });
-        userMessage.unSummary = content;
 
         requestTokenCount(userMessage).then((nTokens) => {
           if (!nTokens) return;
@@ -320,13 +320,13 @@ export const useChatStore = create<ChatStore>()(
 
         let summaryIntro: Message = {
           role: "system",
-          content: `Note that any message prefixed by ${INCREMENTAL_SUMMARY_PREFIX} has been previously summarized by you, so it does not appear in full or in the original form. Do not(!) prefix your responses with ${INCREMENTAL_SUMMARY_PREFIX} and do not(!) try to summarize them..`,
+          content: `Note that any message prefixed by ${INCREMENTAL_SUMMARY_PREFIX} has been previously summarized by you, so it does not appear in full or in the original form. Do not(!) prefix your responses with ${INCREMENTAL_SUMMARY_PREFIX} and do not(!) try to summarize them.`,
           date: "",
         };
         const sendMessages = [
           summaryIntro,
           ...session.mask.context,
-          ...session.messages,
+          ...session.messages.filter((message) => !message.hidden),
         ];
 
         // make request
@@ -336,7 +336,7 @@ export const useChatStore = create<ChatStore>()(
             // stream response
             if (done) {
               botMessage.streaming = false;
-              botMessage.unSummary = botMessage.content = content;
+              botMessage.content = content;
               requestTokenCount(botMessage).then((nTokens) => {
                 if (!nTokens) return;
                 let message: Message = session.messages.filter(
