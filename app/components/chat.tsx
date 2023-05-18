@@ -5,7 +5,7 @@ import SendWhiteIcon from "../icons/send-white.svg";
 import BrainIcon from "../icons/brain.svg";
 import RenameIcon from "../icons/rename.svg";
 import ExportIcon from "../icons/share.svg";
-import ReturnIcon from "../icons/return.svg";
+import CloseIcon from "../icons/close.svg";
 import CopyIcon from "../icons/copy.svg";
 import DownloadIcon from "../icons/download.svg";
 import LoadingIcon from "../icons/three-dots.svg";
@@ -670,7 +670,7 @@ export function Chat() {
         <div className="window-actions">
           <div className={"window-action-button" + " " + styles.mobile}>
             <IconButton
-              icon={<ReturnIcon />}
+              icon={<CloseIcon />}
               bordered
               title={Locale.Chat.Actions.ChatList}
               onClick={() => navigate(Path.Home)}
