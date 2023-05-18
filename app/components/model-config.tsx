@@ -59,7 +59,7 @@ export function ModelConfigList(props: {
         <InputRange
           value={props.modelConfig.temperature?.toFixed(2)}
           min="0.7"
-          max="1.2"
+          max="1.5"
           step="0.02"
           onChange={(e) => {
             props.updateConfig(
