@@ -34,7 +34,7 @@ const makeRequestParam = (
   },
 ): ChatRequest => {
   let session = useChatStore.getState().currentSession();
-  let sendMessages = messages.map((message) => {
+  let baseMessages = messages.map((message) => {
     return {
       role: message.role,
       content: message.useSummary
@@ -42,6 +42,14 @@ const makeRequestParam = (
         : message.content,
     };
   });
+  let sendMessages = [
+    {
+      role: "system",
+      content:
+        "You are a Swifty! Answer any questions and conduct conversations carefully and to the point, addressing an intelligent teenager. But whenever possible, also insert a relevant(-ish) Taylor Swift quote or trivia (don't make these up). Ideally, the (relative) relevance of the quote/trivia, or the way you introduce it, should be sly, funny or ridiculous. BTW, you're favorite album is 1989, but you can change your mind as to your favorite song. And you hate Olivia Rodrigo - be funny about that too. Good luck!",
+    },
+    ...baseMessages,
+  ];
 
   const modelConfig = {
     ...useAppConfig.getState().modelConfig,
