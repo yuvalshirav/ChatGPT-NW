@@ -353,7 +353,7 @@ export function summarizeMessageIncrementally(
       message,
     ],
     {
-      model: "gpt-4-1106-preview",
+      model: "gpt-4-turbo-preview",
       temperature: 0.7,
       presencePenalty: 0,
     },
